@@ -42,7 +42,7 @@ public class EnemyMove : MonoBehaviour
         if (nextMove != 0)
             SpriteRenderer.flipX = nextMove == 1;
 
-        float nextThinkTime = Random.Range(2f, 4f);
+        float nextThinkTime = Random.Range(1f, 3f);
         Invoke("Think", nextThinkTime);
 
     }
