@@ -61,12 +61,12 @@ public class HeroKnight : MonoBehaviour {
         }
 
         //Check if character just started falling
-        if (m_grounded && !m_groundSensor.State())
+        /*if (m_grounded && !m_groundSensor.State())
         {
             m_grounded = false;
             m_animator.SetBool("Grounded", m_grounded);
         }
-
+        */
         // -- Handle input and movement --
         float inputX = Input.GetAxis("Horizontal");
 
