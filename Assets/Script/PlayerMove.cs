@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
+    public GameManager gameManager;
     public float maxSpeed;
     public float jumpPower;
     Rigidbody2D rigid;
@@ -15,6 +16,7 @@ public class PlayerMove : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+     
     }
 
     void Update()
@@ -76,10 +78,33 @@ public class PlayerMove : MonoBehaviour
 
     }
 
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Item")
+        {
+            //Point
+            bool isBronze = collision.gameObject.name.Contains("Bronze");
+            bool isSilver = collision.gameObject.name.Contains("Silver");
+            bool isGold = collision.gameObject.name.Contains("Gold");
+            if (isBronze)
+                gameManager.stagePoint += 50;
+            else if (isSilver)
+                gameManager.stagePoint += 100;
+            else if (isGold)
+                gameManager.stagePoint += 300;
+
+            //Deactive Item
+            collision.gameObject.SetActive(false);
+        }
+        else if (collision.gameObject.tag == "Finish")
+        {
+            gameManager.NextStage();
+        }
+    }
+
+
     void OnAttack(Transform enemy)
     {
-
-
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
 
         EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
@@ -89,6 +114,9 @@ public class PlayerMove : MonoBehaviour
 
     void OnDamaged(Vector2 targetPos)
     {
+        gameManager.health--;
+
+
         gameObject.layer = 11;
 
         spriteRenderer.color = new Color(1, 1, 1, 0.4f);
