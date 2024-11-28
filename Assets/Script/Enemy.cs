@@ -37,7 +37,7 @@ public class Enemy : MonoBehaviour
         nowHpbar.fillAmount = (float)nowHp / (float)maxHp;
     }
 
-    public void TakeDamege(int damage)
+    public void TakeDamage(int damage)
     {
         nowHp -= damage;
         Debug.Log("Damage taken: " + damage + ", Remaining HP: " + nowHp);

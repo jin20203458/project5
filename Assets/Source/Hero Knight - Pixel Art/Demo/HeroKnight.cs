@@ -22,7 +22,7 @@ public class HeroKnight : MonoBehaviour
     private bool m_grounded = false;
     private bool m_rolling = false;
     private int m_facingDirection = 1;
-    private int m_currentAttack = 0;
+    private int m_currentAttack = 1;
     private float m_timeSinceAttack = 0.0f;
     private float m_delayToIdle = 0.0f;
     private float m_rollDuration = 8.0f / 14.0f;
@@ -124,23 +124,6 @@ public class HeroKnight : MonoBehaviour
         //Attack
         else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
         {
-            // 공격 박스의 위치를 m_facingDirection에 따라 조정
-            Vector3 attackBoxPosition = pos.position;
-            if (m_facingDirection == -1)
-            {
-                // 왼쪽을 바라보면 공격 박스를 왼쪽으로 이동
-                attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
-            }
-
-            Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
-            foreach (Collider2D collider in collider2Ds)
-            {
-                if (collider.tag == "Enemy")
-                {
-                    collider.GetComponent<Enemy>().TakeDamege(20);
-                }
-            }
-            m_currentAttack++;
 
             // Loop back to one after third attack
             if (m_currentAttack > 3)
@@ -156,6 +139,26 @@ public class HeroKnight : MonoBehaviour
             // Reset timer
             m_timeSinceAttack = 0.0f;
             curTime = coolTime;
+
+
+            // 공격 박스의 위치를 m_facingDirection에 따라 조정
+            Vector3 attackBoxPosition = pos.position;
+            if (m_facingDirection == -1)
+            {
+                // 왼쪽을 바라보면 공격 박스를 왼쪽으로 이동
+                attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
+            }
+
+            Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
+            foreach (Collider2D collider in collider2Ds)
+            {
+                if (collider.tag == "Enemy")
+                {
+                    collider.GetComponent<Enemy>().TakeDamage(20);
+                }
+            }
+            m_currentAttack++;
+
 
         }
 
@@ -244,33 +247,40 @@ public class HeroKnight : MonoBehaviour
             Gizmos.DrawWireCube(attackBoxPosition, boxSize);
         }
     }
-    /*
-    else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
-{
-    // 공격 모션 실행
-    m_animator.SetTrigger("Attack" + m_currentAttack);
-
-    // 공격 범위의 초기 위치
-    Vector3 attackBoxPosition = pos.position;
-    if (m_facingDirection == -1)
+    private void Attack()
     {
-        attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
-}
+        // Loop back to one after third attack
+        if (m_currentAttack > 3)
+            m_currentAttack = 1;
 
-// 이동 범위 계산: 이동 속도와 방향에 따라 공격 범위가 이동
-Vector3 attackMovement = new Vector3(m_facingDirection * m_speed * Time.deltaTime, 0f, 0f); // 이동 속도 반영
-attackBoxPosition += attackMovement;
+        // Reset Attack combo if time since last attack is too large
+        if (m_timeSinceAttack > 1.0f)
+            m_currentAttack = 1;
 
-// 이동 중 공격 범위 체크
-Collider2D[] colliders = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0f); // 공격 범위 내 적과 충돌 체크
-foreach (Collider2D collider in colliders)
-{
-    if (collider.CompareTag("Enemy"))
-    {
-        // 적이 충돌한 경우
-        collider.GetComponent<Enemy>().TakeDamage(20); // 공격 처리
+        // Call one of three attack animations "Attack1", "Attack2", "Attack3"
+        m_animator.SetTrigger("Attack" + m_currentAttack);
+
+        // Reset timer
+        m_timeSinceAttack = 0.0f;
+        curTime = coolTime;
+
+        // 공격 박스의 위치를 m_facingDirection에 따라 조정
+        Vector3 attackBoxPosition = pos.position;
+        if (m_facingDirection == -1)
+        {
+            // 왼쪽을 바라보면 공격 박스를 왼쪽으로 이동
+            attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
+        }
+
+        Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
+        foreach (Collider2D collider in collider2Ds)
+        {
+            if (collider.tag == "Enemy")
+            {
+                collider.GetComponent<Enemy>().TakeDamage(20);
+            }
+        }
+        m_currentAttack++;
     }
-}
 
-   */
 }
