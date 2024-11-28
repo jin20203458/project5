@@ -1,34 +1,42 @@
 ﻿using UnityEngine;
 using System.Collections;
+using static UnityEditor.PlayerSettings;
 
-public class HeroKnight : MonoBehaviour {
+public class HeroKnight : MonoBehaviour
+{
 
-    [SerializeField] float      m_speed = 4.0f;
-    [SerializeField] float      m_jumpForce = 7.5f;
-    [SerializeField] float      m_rollForce = 6.0f;
-    [SerializeField] bool       m_noBlood = false;
+    [SerializeField] float m_speed = 4.0f;
+    [SerializeField] float m_jumpForce = 7.5f;
+    [SerializeField] float m_rollForce = 6.0f;
+    [SerializeField] bool m_noBlood = false;
     [SerializeField] GameObject m_slideDust;
 
-    private Animator            m_animator;
-    private Rigidbody2D         m_body2d;
-    private Sensor_HeroKnight   m_groundSensor;
-    private Sensor_HeroKnight   m_wallSensorR1;
-    private Sensor_HeroKnight   m_wallSensorR2;
-    private Sensor_HeroKnight   m_wallSensorL1;
-    private Sensor_HeroKnight   m_wallSensorL2;
-    private bool                m_isWallSliding = false;
-    private bool                m_grounded = false;
-    private bool                m_rolling = false;
-    private int                 m_facingDirection = 1;
-    private int                 m_currentAttack = 0;
-    private float               m_timeSinceAttack = 0.0f;
-    private float               m_delayToIdle = 0.0f;
-    private float               m_rollDuration = 8.0f / 14.0f;
-    private float               m_rollCurrentTime;
+    private Animator m_animator;
+    private Rigidbody2D m_body2d;
+    private Sensor_HeroKnight m_groundSensor;
+    private Sensor_HeroKnight m_wallSensorR1;
+    private Sensor_HeroKnight m_wallSensorR2;
+    private Sensor_HeroKnight m_wallSensorL1;
+    private Sensor_HeroKnight m_wallSensorL2;
+    private bool m_isWallSliding = false;
+    private bool m_grounded = false;
+    private bool m_rolling = false;
+    private int m_facingDirection = 1;
+    private int m_currentAttack = 0;
+    private float m_timeSinceAttack = 0.0f;
+    private float m_delayToIdle = 0.0f;
+    private float m_rollDuration = 8.0f / 14.0f;
+    private float m_rollCurrentTime;
+
+    private float curTime;
+    public float coolTime = 0.5f;
+    public Transform pos;
+    public Vector2 boxSize;
+
 
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
         m_animator = GetComponent<Animator>();
         m_body2d = GetComponent<Rigidbody2D>();
@@ -40,17 +48,17 @@ public class HeroKnight : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
         // Increase timer that controls attack combo
         m_timeSinceAttack += Time.deltaTime;
 
         // Increase timer that checks roll duration
-        if(m_rolling)
+        if (m_rolling)
             m_rollCurrentTime += Time.deltaTime;
 
         // Disable rolling if timer extends duration
-        if(m_rollCurrentTime > m_rollDuration)
+        if (m_rollCurrentTime > m_rollDuration)
             m_rolling = false;
 
         //Check if character just landed on the ground
@@ -76,7 +84,7 @@ public class HeroKnight : MonoBehaviour {
             GetComponent<SpriteRenderer>().flipX = false;
             m_facingDirection = 1;
         }
-            
+
         else if (inputX < 0)
         {
             GetComponent<SpriteRenderer>().flipX = true;
@@ -84,8 +92,15 @@ public class HeroKnight : MonoBehaviour {
         }
 
         // Move
-        if (!m_rolling )
+        if (!m_rolling)
             m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
+
+        if (m_grounded == false && Mathf.Abs(inputX) > Mathf.Epsilon)
+        {
+            m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
+        }
+
+
 
         //Set AirSpeed in animator
         m_animator.SetFloat("AirSpeedY", m_body2d.velocity.y);
@@ -101,14 +116,30 @@ public class HeroKnight : MonoBehaviour {
             m_animator.SetBool("noBlood", m_noBlood);
             m_animator.SetTrigger("Death");
         }
-            
+
         //Hurt
         else if (Input.GetKeyDown("q") && !m_rolling)
             m_animator.SetTrigger("Hurt");
 
         //Attack
-        else if(Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
+        else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
         {
+            // 공격 박스의 위치를 m_facingDirection에 따라 조정
+            Vector3 attackBoxPosition = pos.position;
+            if (m_facingDirection == -1)
+            {
+                // 왼쪽을 바라보면 공격 박스를 왼쪽으로 이동
+                attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
+            }
+
+            Collider2D[] collider2Ds = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
+            foreach (Collider2D collider in collider2Ds)
+            {
+                if (collider.tag == "Enemy")
+                {
+                    collider.GetComponent<Enemy>().TakeDamege(20);
+                }
+            }
             m_currentAttack++;
 
             // Loop back to one after third attack
@@ -124,6 +155,8 @@ public class HeroKnight : MonoBehaviour {
 
             // Reset timer
             m_timeSinceAttack = 0.0f;
+            curTime = coolTime;
+
         }
 
         // Block
@@ -143,7 +176,7 @@ public class HeroKnight : MonoBehaviour {
             m_animator.SetTrigger("Roll");
             m_body2d.velocity = new Vector2(m_facingDirection * m_rollForce, m_body2d.velocity.y);
         }
-            
+
 
         //Jump
         else if (Input.GetKeyDown("space") && m_grounded && !m_rolling)
@@ -168,8 +201,8 @@ public class HeroKnight : MonoBehaviour {
         {
             // Prevents flickering transitions to idle
             m_delayToIdle -= Time.deltaTime;
-                if(m_delayToIdle < 0)
-                    m_animator.SetInteger("AnimState", 0);
+            if (m_delayToIdle < 0)
+                m_animator.SetInteger("AnimState", 0);
         }
     }
 
@@ -192,4 +225,52 @@ public class HeroKnight : MonoBehaviour {
             dust.transform.localScale = new Vector3(m_facingDirection, 1, 1);
         }
     }
+    private void OnDrawGizmos()
+    {
+        if (pos != null)
+        {
+            Gizmos.color = Color.blue;
+
+            // m_facingDirection에 따라 공격 범위 박스의 위치를 조정
+            Vector3 attackBoxPosition = pos.position;
+
+            if (m_facingDirection == -1)
+            {
+                // 왼쪽을 바라보고 있을 때, 박스를 왼쪽으로 이동
+                attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
+            }
+
+            // 기즈모 그리기
+            Gizmos.DrawWireCube(attackBoxPosition, boxSize);
+        }
+    }
+    /*
+    else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
+{
+    // 공격 모션 실행
+    m_animator.SetTrigger("Attack" + m_currentAttack);
+
+    // 공격 범위의 초기 위치
+    Vector3 attackBoxPosition = pos.position;
+    if (m_facingDirection == -1)
+    {
+        attackBoxPosition = new Vector3(pos.position.x - boxSize.x, pos.position.y, pos.position.z);
+}
+
+// 이동 범위 계산: 이동 속도와 방향에 따라 공격 범위가 이동
+Vector3 attackMovement = new Vector3(m_facingDirection * m_speed * Time.deltaTime, 0f, 0f); // 이동 속도 반영
+attackBoxPosition += attackMovement;
+
+// 이동 중 공격 범위 체크
+Collider2D[] colliders = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0f); // 공격 범위 내 적과 충돌 체크
+foreach (Collider2D collider in colliders)
+{
+    if (collider.CompareTag("Enemy"))
+    {
+        // 적이 충돌한 경우
+        collider.GetComponent<Enemy>().TakeDamage(20); // 공격 처리
+    }
+}
+
+   */
 }
