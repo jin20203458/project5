@@ -326,6 +326,9 @@ PrefabInstance:
       addedObject: {fileID: 1303134332}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6323719953710832613, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 1166590645}
+    - targetCorrespondingSourceObject: {fileID: 6323719953710832613, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1166590641}
   m_SourcePrefab: {fileID: 100100000, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
@@ -1821,6 +1824,22 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: -0.19071639}
   m_Size: {x: 0.7900001, y: 1.3014328}
   m_Direction: 0
+--- !u!114 &1166590645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166590635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bf48d7175b0434438fc40a3d5fcebb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillPrefab: {fileID: 7777704480401770289, guid: 2999dc848c5ec1842baac0117d8a9595, type: 3}
+  spawnRange: 5
+  destroyTime: 2
+  spawnInterval: 0.5
 --- !u!1 &1185813472
 GameObject:
   m_ObjectHideFlags: 0
