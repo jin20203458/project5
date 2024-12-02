@@ -1,8 +1,12 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class Enemy : MonoBehaviour
 {
+    Rigidbody2D rigid;
+    SpriteRenderer SpriteRenderer;
     public GameObject prfHpBar;
     public GameObject canvas;
     RectTransform hpBar;
@@ -15,12 +19,22 @@ public class Enemy : MonoBehaviour
     Image nowHpbar;
     public float height = 1.7f;
     public float detectionRange = 5f;
+    public int nextMove;
 
     Transform player;
     bool isChasing = false;
 
+    private void Awake()
+    {
+        rigid = GetComponent<Rigidbody2D>();
+        SpriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+
     void Start()
     {
+
+        SpriteRenderer = GetComponent<SpriteRenderer>();
         // 체력 바 초기화 (각 적에 대해 독립적으로 생성)
         hpBar = Instantiate(prfHpBar, canvas.transform).GetComponent<RectTransform>();
 
@@ -100,20 +114,60 @@ public class Enemy : MonoBehaviour
         // 플레이어가 탐지 범위 안에 있을 경우에만 추적
         if (distanceToPlayer <= detectionRange)
         {
-            isChasing = true;
+            isChasing = true; // 플레이어가 범위 안에 있으면 추적 시작
         }
         else
         {
-            isChasing = false;
+            isChasing = false; // 범위 밖이면 추적 멈춤
         }
 
         // 플레이어를 추적
         if (isChasing)
         {
-            Vector2 direction = (player.position - transform.position).normalized;
-            transform.position = Vector2.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
-            LookAtPlayer();
+            Vector2 frontVec = new Vector2(rigid.position.x + nextMove * 0.5f, rigid.position.y);
+            RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector3.down, 3, LayerMask.GetMask("Platform"));
+
+            if (rayHit.collider == null && !isChangingDirection) // 벽 끝에 닿은 경우 (반복하지 않도록)
+            {
+                StartCoroutine(MoveAwayAndRetry()); // 벽 끝에서 처리하는 코루틴 호출
+                isChangingDirection = true; // 반대 방향으로 이동 중임을 표시
+            }
+            else
+            {
+                // 추적 로직
+                Vector3 direction = (player.position - transform.position).normalized;
+                transform.position = Vector3.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
+                LookAtPlayer();
+            }
         }
+    }
+
+    private bool isChangingDirection = false; // 벽 끝에 닿을 때 이동 상태 관리
+
+    private IEnumerator MoveAwayAndRetry()
+    {
+        Debug.Log("Hit wall, changing direction.");
+
+        // 방향 전환
+        nextMove *= -1;
+        SpriteRenderer.flipX = nextMove == 1;
+
+        // 반대 방향으로 이동할 거리
+        float moveDistance = 1f; // 반대 방향으로 이동할 거리
+        float moveTime = 0.5f; // 반대 방향으로 이동할 시간
+        float elapsedTime = 0f;
+
+        // 반대 방향으로 이동하기 (이동 거리를 기준으로 이동)
+        while (elapsedTime < moveTime)
+        {
+            elapsedTime += Time.deltaTime;
+            float moveAmount = Mathf.Lerp(0, moveDistance, elapsedTime / moveTime); // 시간에 따라 이동 거리 계산
+            transform.Translate(Vector2.right * nextMove * moveAmount * Time.deltaTime); // 이동
+            yield return null;
+        }
+
+        // 이동 후 추적을 재개
+        isChangingDirection = false; // 이동이 끝났으므로 추적을 재개
     }
 
     private void LookAtPlayer()
