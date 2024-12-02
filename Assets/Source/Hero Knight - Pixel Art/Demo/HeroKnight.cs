@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class HeroKnight : MonoBehaviour
+public class HeroKnight1 : MonoBehaviour
 {
     // [Header] 속성을 이용해 인스펙터에서 보기 좋게 카테고리화
     [Header("속성")]

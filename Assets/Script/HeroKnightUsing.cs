@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class HeroKnight : MonoBehaviour
+public class HeroKnightUsing : MonoBehaviour
 {
     [Header("속성")]
     [SerializeField] float m_speed = 4.0f;           // 이동 속도

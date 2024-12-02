@@ -524,7 +524,6 @@ MonoBehaviour:
   moveSpeed: 3
   height: 1.7
   detectionRange: 8
-  fallCheckDistance: 2
 --- !u!4 &389232568
 Transform:
   m_ObjectHideFlags: 0
@@ -582,7 +581,6 @@ MonoBehaviour:
   moveSpeed: 3
   height: 1.7
   detectionRange: 5
-  fallCheckDistance: 2
 --- !u!4 &442268312
 Transform:
   m_ObjectHideFlags: 0
@@ -1959,10 +1957,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bf48d7175b0434438fc40a3d5fcebb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skillPrefab: {fileID: 7777704480401770289, guid: 2999dc848c5ec1842baac0117d8a9595, type: 3}
+  skillPrefab: {fileID: 0}
   spawnRange: 5
-  destroyTime: 2
-  spawnInterval: 0.5
+  destroyTime: 1
+  spawnInterval: 0.05
 --- !u!1 &1185813472
 GameObject:
   m_ObjectHideFlags: 0
