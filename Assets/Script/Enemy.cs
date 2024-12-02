@@ -15,7 +15,7 @@ public class Enemy : MonoBehaviour
     public int nowHp;
     public int atkDmg;
     public int atkSpeed;
-    public float moveSpeed = 3f;
+    public float moveSpeed = 3f; // 기본 이동 속도
     Image nowHpbar;
     public float height = 1.7f;
     public float detectionRange = 5f;
@@ -30,10 +30,8 @@ public class Enemy : MonoBehaviour
         SpriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-
     void Start()
     {
-
         SpriteRenderer = GetComponent<SpriteRenderer>();
         // 체력 바 초기화 (각 적에 대해 독립적으로 생성)
         hpBar = Instantiate(prfHpBar, canvas.transform).GetComponent<RectTransform>();
@@ -129,7 +127,7 @@ public class Enemy : MonoBehaviour
 
             if (rayHit.collider == null && !isChangingDirection) // 벽 끝에 닿은 경우 (반복하지 않도록)
             {
-                StartCoroutine(MoveAwayAndRetry()); // 벽 끝에서 처리하는 코루틴 호출
+                MoveAwayAndRetry(); // 벽 끝에서 처리하는 로직 호출
                 isChangingDirection = true; // 반대 방향으로 이동 중임을 표시
             }
             else
@@ -144,41 +142,38 @@ public class Enemy : MonoBehaviour
 
     private bool isChangingDirection = false; // 벽 끝에 닿을 때 이동 상태 관리
 
-    private IEnumerator MoveAwayAndRetry()
+    private void MoveAwayAndRetry()
     {
-        Debug.Log("Hit wall, changing direction.");
+        Debug.Log("Hit wall, stopping movement for a moment.");
 
-        // 방향 전환
-        nextMove *= -1;
-        SpriteRenderer.flipX = nextMove == 1;
+        // 이동 속도를 0으로 설정하여 멈춤
+        moveSpeed = 0f;
 
-        // 반대 방향으로 이동할 거리
-        float moveDistance = 1f; // 반대 방향으로 이동할 거리
-        float moveTime = 0.5f; // 반대 방향으로 이동할 시간
-        float elapsedTime = 0f;
+        // 잠시 멈춘 후 추적을 재개
+        StartCoroutine(ResumeMovementAfterDelay()); // 일정 시간 후 이동을 재개하는 코루틴 호출
+    }
 
-        // 반대 방향으로 이동하기 (이동 거리를 기준으로 이동)
-        while (elapsedTime < moveTime)
-        {
-            elapsedTime += Time.deltaTime;
-            float moveAmount = Mathf.Lerp(0, moveDistance, elapsedTime / moveTime); // 시간에 따라 이동 거리 계산
-            transform.Translate(Vector2.right * nextMove * moveAmount * Time.deltaTime); // 이동
-            yield return null;
-        }
+    private IEnumerator ResumeMovementAfterDelay()
+    {
+        yield return new WaitForSeconds(1f); // 1초 동안 대기
 
-        // 이동 후 추적을 재개
-        isChangingDirection = false; // 이동이 끝났으므로 추적을 재개
+        // 이동 속도를 원래 값으로 되돌림
+        moveSpeed = 3f; // 기본 이동 속도 (원하는 값으로 설정)
+
+        isChangingDirection = false; // 다시 추적을 시작할 수 있도록 상태 변경
     }
 
     private void LookAtPlayer()
     {
         if (player.position.x > transform.position.x)
         {
-            transform.localScale = new Vector3(1, 1, 1);
+            // 플레이어가 오른쪽에 있으면
+            transform.localScale = new Vector3(1, 1, 1); // 오른쪽으로 반전
         }
         else
         {
-            transform.localScale = new Vector3(-1, 1, 1);
+            // 플레이어가 왼쪽에 있으면
+            transform.localScale = new Vector3(-1, 1, 1); // 왼쪽으로 반전
         }
     }
 
