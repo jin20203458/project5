@@ -24,6 +24,7 @@ public class Enemy : MonoBehaviour
     Transform player;
     bool isChasing = false;
 
+    private Vector3 initialPosition;
     private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
@@ -64,6 +65,7 @@ public class Enemy : MonoBehaviour
         {
             Debug.LogError("Player object not found!");
         }
+        initialPosition = transform.position;
     }
 
     void Update()
@@ -79,7 +81,8 @@ public class Enemy : MonoBehaviour
         }
 
         // 플레이어 탐지 및 추적
-        DetectAndChasePlayer();
+        if (isChangingDirection == false)
+            DetectAndChasePlayer();
     }
 
     public void TakeDamage(int damage)
@@ -155,11 +158,10 @@ public class Enemy : MonoBehaviour
 
     private IEnumerator ResumeMovementAfterDelay()
     {
-        yield return new WaitForSeconds(1f); // 1초 동안 대기
-
-        // 이동 속도를 원래 값으로 되돌림
+        yield return new WaitForSeconds(2f); // 1초 동안 대기
+        
         moveSpeed = 3f; // 기본 이동 속도 (원하는 값으로 설정)
-
+        transform.position = Vector3.MoveTowards(transform.position, initialPosition, Time.deltaTime * 5f);
         isChangingDirection = false; // 다시 추적을 시작할 수 있도록 상태 변경
     }
 
