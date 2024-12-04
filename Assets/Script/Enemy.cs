@@ -20,11 +20,14 @@ public class Enemy : MonoBehaviour
     public float height = 1.7f;
     public float detectionRange = 5f;
     public int nextMove;
+    public CameraShake cameraShake;
 
     Transform player;
     bool isChasing = false;
-
     private Vector3 initialPosition;
+
+    private int attackCount = 0;  // 공격 횟수를 추적하는 변수
+
     private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
@@ -85,16 +88,50 @@ public class Enemy : MonoBehaviour
             DetectAndChasePlayer();
     }
 
+    private bool isKnockedBack = false;
+
     public void TakeDamage(int damage)
     {
+        if (isKnockedBack) return; // 이미 밀려나고 있으면 피격을 무시
+
         nowHp -= damage;
         Debug.Log("Damage taken: " + damage + ", Remaining HP: " + nowHp);
+
+        // 3번째 공격에서만 카메라 흔들림 발생
+        attackCount++;
+        if (attackCount == 3)
+        {
+            cameraShake.ShakeCamera();
+            attackCount = 0;  // 공격 횟수 리셋
+        }
 
         if (nowHp <= 0)
         {
             Destroy(gameObject);
             Destroy(hpBar.gameObject);
         }
+        else
+        {
+            // 피격 시 한 번만 밀려나도록
+            if (!isKnockedBack)
+            {
+                // Calculate knockback direction
+                Vector2 knockbackDirection = (transform.position - player.position).normalized;
+
+                // Apply knockback force in the opposite direction of the player
+                rigid.velocity = Vector2.zero;  // 현재 속도를 리셋
+                rigid.AddForce(knockbackDirection * 6f, ForceMode2D.Impulse);
+
+                isKnockedBack = true;
+                StartCoroutine(ResetKnockback());
+            }
+        }
+    }
+
+    private IEnumerator ResetKnockback()
+    {
+        yield return new WaitForSeconds(0.5f); // 밀려나는 시간이 끝난 후
+        isKnockedBack = false; // 다시 밀려날 수 있도록 리셋
     }
 
     private void SetEnemyStatus(string _enemyName, int _maxHp, int _atkDmg, int _atkSpeed)
@@ -159,7 +196,7 @@ public class Enemy : MonoBehaviour
     private IEnumerator ResumeMovementAfterDelay()
     {
         yield return new WaitForSeconds(2f); // 1초 동안 대기
-        
+
         moveSpeed = 3f; // 기본 이동 속도 (원하는 값으로 설정)
         transform.position = Vector3.MoveTowards(transform.position, initialPosition, Time.deltaTime * 5f);
         isChangingDirection = false; // 다시 추적을 시작할 수 있도록 상태 변경

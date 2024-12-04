@@ -8,7 +8,7 @@ public class HeroKnightUsing : MonoBehaviour
     [SerializeField] float m_speed = 4.0f;           // 이동 속도
     [SerializeField] float m_jumpForce = 7.5f;       // 점프 힘
     [SerializeField] float m_rollForce = 6.0f;       // 구르기 힘
-    [SerializeField] bool m_noBlood = false;         // 피 여부
+    //[SerializeField] bool m_noBlood = false;         // 피 여부
     [SerializeField] GameObject m_slideDust;         // 슬라이딩 먼지 이펙트
 
     private Animator m_animator;                      // 애니메이터
