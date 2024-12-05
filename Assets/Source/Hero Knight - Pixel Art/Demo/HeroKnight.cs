@@ -162,7 +162,7 @@ public class HeroKnight1 : MonoBehaviour
         Collider2D[] colliders = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
         foreach (Collider2D collider in colliders)
         {
-            if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider))
+            if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider) )
             {
                 collider.GetComponent<Enemy>().TakeDamage(20); // 적에게 데미지 전달
                 hitEnemies.Add(collider); // 중복 타격 방지

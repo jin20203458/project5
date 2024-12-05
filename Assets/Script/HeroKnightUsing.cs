@@ -26,11 +26,15 @@ public class HeroKnightUsing : MonoBehaviour
     private float m_rollDuration = 8.0f / 14.0f;      // 구르기 지속 시간
     private float m_rollCurrentTime = 0.0f;           // 구르기 현재 시간
 
-    public Transform pos;                             // 공격 위치
-    public Vector2 boxSize;                           // 공격 범위 크기
 
     private bool m_isAttacking = false;               // 공격 중인지 여부
     private HashSet<Collider2D> hitEnemies = new HashSet<Collider2D>(); // 타격된 적 추적
+
+
+    public Transform pos;                             // 공격 위치
+    public Vector2 boxSize;                           // 공격 범위 크기
+    public float attackDuration = 0.2f;               // 공격 속도
+
 
     void Start()
     {
@@ -49,7 +53,7 @@ public class HeroKnightUsing : MonoBehaviour
     void Update()
     {
         // 타이머 업데이트
-        m_timeSinceAttack += Time.deltaTime;
+        m_timeSinceAttack += Time.deltaTime; // 공격 후 경과 시간 갱신
         if (m_rolling)
         {
             m_rollCurrentTime += Time.deltaTime;
@@ -67,30 +71,68 @@ public class HeroKnightUsing : MonoBehaviour
         HandleAnimations(); // 애니메이션 처리
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         HandleMovement(); // 이동 처리
+
+        // 구르기 상태가 끝났을 때 충돌을 다시 활성화
+        if (m_rolling)
+        {
+            m_rollCurrentTime += Time.deltaTime;
+            if (m_rollCurrentTime >= m_rollDuration)
+            {
+                m_rolling = false; // 구르기 종료
+                IgnoreEnemyCollisions(false); // 구르기 끝난 후 충돌 다시 활성화
+            }
+        }
+    }
+
+    private void IgnoreEnemyCollisions(bool ignore)
+    {
+        // 모든 적과의 충돌 무시 / 활성화 처리
+        Collider2D[] enemies = Physics2D.OverlapBoxAll(transform.position, boxSize, 0);
+        foreach (Collider2D enemy in enemies)
+        {
+            if (enemy.CompareTag("Enemy"))
+            {
+                if (ignore)
+                {
+                    Physics2D.IgnoreCollision(GetComponent<Collider2D>(), enemy, true);
+                }
+                else
+                {
+                    Physics2D.IgnoreCollision(GetComponent<Collider2D>(), enemy, false);
+                }
+            }
+        }
     }
 
     private void HandleMovement()
     {
         float inputX = Input.GetAxis("Horizontal");
 
-        // 방향 전환 처리
-        if (inputX > 0)
+        // 구르기 중에 y축 속도를 0으로 고정
+        if (m_rolling)
         {
-            GetComponent<SpriteRenderer>().flipX = false;
-            m_facingDirection = 1;
-        }
-        else if (inputX < 0)
-        {
-            GetComponent<SpriteRenderer>().flipX = true;
-            m_facingDirection = -1;
-        }
+            m_body2d.velocity = new Vector2(m_facingDirection * m_rollForce * 3, 0f); // y축 속도 0으로 설정
 
-        // 구르기 중이 아닐 때만 이동
-        if (!m_rolling)
-            m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
+            // 구르기 중에 적 위로 올라가는지 확인
+            Collider2D[] colliders = Physics2D.OverlapBoxAll(transform.position, boxSize, 0);
+            foreach (Collider2D collider in colliders)
+            {
+                if (collider.CompareTag("Enemy"))
+                {
+                    // 적과 충돌한 경우 구르기를 종료
+                    m_rolling = false;
+                    m_rollCurrentTime = m_rollDuration; // 구르기를 즉시 끝내기 위해 타이머 설정
+                    break;
+                }
+            }
+        }
+        else
+        {
+            m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y); // 일반 이동 처리
+        }
 
         // 공중에 있을 때의 애니메이션 처리
         m_animator.SetFloat("AirSpeedY", m_body2d.velocity.y);
@@ -106,7 +148,7 @@ public class HeroKnightUsing : MonoBehaviour
         // 공격, 구르기, 점프 등 애니메이션 트리거 처리
         if (Input.GetKeyDown("e") && !m_rolling) m_animator.SetTrigger("Death");
         else if (Input.GetKeyDown("q") && !m_rolling) m_animator.SetTrigger("Hurt");
-        else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling && !m_isAttacking)
+        else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > attackDuration && !m_rolling && !m_isAttacking) // 공격 쿨타임 추가
         {
             StartCoroutine(AttackCoroutine()); // 공격 코루틴 호출
         }
@@ -130,6 +172,7 @@ public class HeroKnightUsing : MonoBehaviour
             // 구르기 지속 시간 늘리기 (기존 시간을 조금 늘려서 구를 때 더 멀리 이동)
             m_rollDuration = 0.25f; // 기존보다 약간 더 길게 (예시로 0.25초로 설정)
             m_rollCurrentTime = 0.0f;
+
         }
         else if (Input.GetKeyDown("space") && m_grounded && !m_rolling)
         {
@@ -184,6 +227,13 @@ public class HeroKnightUsing : MonoBehaviour
             if (!m_rolling)
                 m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
         }
+
+        // 구르기 상태가 끝났을 때 충돌을 다시 활성화
+        if (m_rolling && m_rollCurrentTime > m_rollDuration)
+        {
+            m_rolling = false;
+            IgnoreEnemyCollisions(false); // 충돌을 다시 활성화
+        }
     }
 
     private IEnumerator AttackCoroutine()
@@ -193,7 +243,6 @@ public class HeroKnightUsing : MonoBehaviour
         m_animator.SetTrigger("Attack" + m_currentAttack); // 공격 애니메이션 시작
 
         // 공격 지속 시간 동안 공격 판정 처리
-        float attackDuration = 0.2f; // 공격 지속 시간
         float timeElapsed = 0f;
 
         // 공격 중에 타격 체크
@@ -206,7 +255,11 @@ public class HeroKnightUsing : MonoBehaviour
 
         m_isAttacking = false;
         m_currentAttack = (m_currentAttack % 3) + 1; // 공격 콤보 순서 변경
+
+        // 공격 후 쿨타임 추가
+        m_timeSinceAttack = 0.0f; // 공격 후 쿨타임 리셋
     }
+
     private void Attack()
     {
         // 공격 박스 위치 조정
@@ -226,6 +279,8 @@ public class HeroKnightUsing : MonoBehaviour
         }
     }
 
+
+
     private void OnDrawGizmos()
     {
         if (pos != null)
@@ -236,7 +291,5 @@ public class HeroKnightUsing : MonoBehaviour
         }
     }
 }
-
-
 
 

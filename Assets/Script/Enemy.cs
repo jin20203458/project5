@@ -7,36 +7,41 @@ public class Enemy : MonoBehaviour
 {
     Rigidbody2D rigid;
     SpriteRenderer SpriteRenderer;
+    RectTransform hpBar;
+    Image nowHpbar;
+    Transform player;
+    Animator anim;
+
     public GameObject prfHpBar;
     public GameObject canvas;
-    RectTransform hpBar;
     public string enemyName;
     public int maxHp;
     public int nowHp;
     public int atkDmg;
     public int atkSpeed;
     public float moveSpeed = 3f; // 기본 이동 속도
-    Image nowHpbar;
     public float height = 1.7f;
     public float detectionRange = 5f;
     public int nextMove;
     public CameraShake cameraShake;
+    public float baseKnockbackForce = 6f;
 
-    Transform player;
+   
     bool isChasing = false;
     private Vector3 initialPosition;
-
     private int attackCount = 0;  // 공격 횟수를 추적하는 변수
+    private float currentKnockbackForce;     // 현재 적용된 넉백 강도 (3타 후 고정값 적용)
+
 
     private void Awake()
     {
+        anim = GetComponent<Animator>();
         rigid = GetComponent<Rigidbody2D>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Start()
     {
-        SpriteRenderer = GetComponent<SpriteRenderer>();
         // 체력 바 초기화 (각 적에 대해 독립적으로 생성)
         hpBar = Instantiate(prfHpBar, canvas.transform).GetComponent<RectTransform>();
 
@@ -69,6 +74,8 @@ public class Enemy : MonoBehaviour
             Debug.LogError("Player object not found!");
         }
         initialPosition = transform.position;
+        // 게임 시작 시 기본 넉백 강도로 초기화
+        currentKnockbackForce = baseKnockbackForce;
     }
 
     void Update()
@@ -97,30 +104,46 @@ public class Enemy : MonoBehaviour
         nowHp -= damage;
         Debug.Log("Damage taken: " + damage + ", Remaining HP: " + nowHp);
 
-        // 3번째 공격에서만 카메라 흔들림 발생
+        // 공격 횟수 증가
         attackCount++;
+
+        // 3번째 공격에서만 카메라 흔들림 발생
         if (attackCount == 3)
         {
             cameraShake.ShakeCamera();
-            attackCount = 0;  // 공격 횟수 리셋
+            // 3번째 공격 시 넉백 강도를 고정값(예: 8)으로 설정
+            currentKnockbackForce = 8f;  // 고정된 넉백 강도 설정
+            attackCount = 0; // 공격 횟수 리셋
         }
 
         if (nowHp <= 0)
         {
-            Destroy(gameObject);
-            Destroy(hpBar.gameObject);
+            anim.SetBool("isHunt", false);
+            // 죽을 때 "isDead" 애니메이션 설정
+            anim.SetBool("isDead", true);  // "isDead" 애니메이션 트리거
+
+            // 일정 시간 후 객체를 파괴
+            StartCoroutine(HandleDeath());
         }
+        else if (!anim.GetBool("isHunt"))// 피격 시 애니메이션 처리 (isHunt이 false일 때만 변경)
+        {
+            anim.SetBool("isHunt", true);  // 피격 시 "isHunt" 애니메이션 트리거
+        }
+
+        
+      
+        
+
+
         else
         {
             // 피격 시 한 번만 밀려나도록
             if (!isKnockedBack)
             {
-                // Calculate knockback direction
                 Vector2 knockbackDirection = (transform.position - player.position).normalized;
 
-                // Apply knockback force in the opposite direction of the player
                 rigid.velocity = Vector2.zero;  // 현재 속도를 리셋
-                rigid.AddForce(knockbackDirection * 6f, ForceMode2D.Impulse);
+                rigid.AddForce(knockbackDirection * currentKnockbackForce, ForceMode2D.Impulse); // 현재 적용된 넉백 강도 사용
 
                 isKnockedBack = true;
                 StartCoroutine(ResetKnockback());
@@ -128,10 +151,25 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    // 넉백 초기화
     private IEnumerator ResetKnockback()
     {
-        yield return new WaitForSeconds(0.5f); // 밀려나는 시간이 끝난 후
-        isKnockedBack = false; // 다시 밀려날 수 있도록 리셋
+        yield return new WaitForSeconds(0.1f); // 0.1초 후 넉백 상태 초기화
+        isKnockedBack = false;
+        anim.SetBool("isHunt", false);
+        // 넉백 강도를 기본값으로 되돌림
+        currentKnockbackForce = baseKnockbackForce; // 기본 넉백 강도로 초기화
+    }
+
+    // 죽을 때 처리 (1초 대기 후 객체 파괴)
+    private IEnumerator HandleDeath()
+    {
+        // 1초 동안 애니메이션을 재생
+        yield return new WaitForSeconds(0.5f);  // 1초 대기
+
+        // 객체를 파괴
+        Destroy(gameObject);
+        Destroy(hpBar.gameObject);  // 체력 바도 파괴
     }
 
     private void SetEnemyStatus(string _enemyName, int _maxHp, int _atkDmg, int _atkSpeed)
