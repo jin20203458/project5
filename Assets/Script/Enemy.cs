@@ -91,71 +91,65 @@ public class Enemy : MonoBehaviour
         }
 
         // 플레이어 탐지 및 추적
-        if (isChangingDirection == false)
+        if (isChangingDirection == false && nowHp > 0)
             DetectAndChasePlayer();
     }
 
-    private bool isKnockedBack = false;
-
     public void TakeDamage(int damage)
     {
-        if (isKnockedBack) return; // 이미 밀려나고 있으면 피격을 무시
+        // 이미 죽는 중이면 추가 피해를 무시
+        if (anim.GetBool("isDead")) return;
 
+        // 체력 감소
         nowHp -= damage;
-        Debug.Log("Damage taken: " + damage + ", Remaining HP: " + nowHp);
+
+        // 체력이 0 이하일 경우 즉시 죽음 처리
+        if (nowHp <= 0)
+        {
+            nowHp = 0; // 체력을 0으로 고정
+            anim.SetBool("isHunt", false); // 피격 애니메이션 해제
+            anim.SetBool("isDead", true);  // 죽음 애니메이션 트리거
+
+            Debug.Log($"Enemy {enemyName} is dead."); // 디버그 메시지
+            StartCoroutine(HandleDeath()); // 죽음 처리 코루틴 호출
+            return; // 함수 종료
+        }
+
+        // 체력이 남아 있는 경우 피격 처리
+        Debug.Log($"Damage taken: {damage}, Remaining HP: {nowHp}");
+
+        // 피격 애니메이션 트리거
+        if (!anim.GetBool("isHunt"))
+        {
+            anim.SetBool("isHunt", true); // 피격 상태 시작
+        }
+
+        // 넉백 처리 (피격 시 밀려나는 효과)
+        Vector2 knockbackDirection = (transform.position - player.position).normalized;
+
+        // 넉백 강도 설정 (기본 또는 3타 공격에서의 강도)
+        rigid.velocity = Vector2.zero; // 현재 속도를 초기화
+        rigid.AddForce(knockbackDirection * currentKnockbackForce, ForceMode2D.Impulse);
+
+        StartCoroutine(ResetKnockback());
 
         // 공격 횟수 증가
         attackCount++;
 
-        // 3번째 공격에서만 카메라 흔들림 발생
+        // 3번째 공격마다 카메라 흔들림 발생
         if (attackCount == 3)
         {
-            cameraShake.ShakeCamera();
-            // 3번째 공격 시 넉백 강도를 고정값(예: 8)으로 설정
-            currentKnockbackForce = 8f;  // 고정된 넉백 강도 설정
-            attackCount = 0; // 공격 횟수 리셋
-        }
-
-        if (nowHp <= 0)
-        {
-            anim.SetBool("isHunt", false);
-            // 죽을 때 "isDead" 애니메이션 설정
-            anim.SetBool("isDead", true);  // "isDead" 애니메이션 트리거
-
-            // 일정 시간 후 객체를 파괴
-            StartCoroutine(HandleDeath());
-        }
-        else if (!anim.GetBool("isHunt"))// 피격 시 애니메이션 처리 (isHunt이 false일 때만 변경)
-        {
-            anim.SetBool("isHunt", true);  // 피격 시 "isHunt" 애니메이션 트리거
-        }
-
-        
-      
-        
-
-
-        else
-        {
-            // 피격 시 한 번만 밀려나도록
-            if (!isKnockedBack)
-            {
-                Vector2 knockbackDirection = (transform.position - player.position).normalized;
-
-                rigid.velocity = Vector2.zero;  // 현재 속도를 리셋
-                rigid.AddForce(knockbackDirection * currentKnockbackForce, ForceMode2D.Impulse); // 현재 적용된 넉백 강도 사용
-
-                isKnockedBack = true;
-                StartCoroutine(ResetKnockback());
-            }
+            cameraShake.ShakeCamera(); // 카메라 흔들림 실행
+            currentKnockbackForce = 8f; // 3번째 공격 넉백 강도 고정
+            attackCount = 0; // 공격 횟수 초기화
         }
     }
+
 
     // 넉백 초기화
     private IEnumerator ResetKnockback()
     {
         yield return new WaitForSeconds(0.1f); // 0.1초 후 넉백 상태 초기화
-        isKnockedBack = false;
         anim.SetBool("isHunt", false);
         // 넉백 강도를 기본값으로 되돌림
         currentKnockbackForce = baseKnockbackForce; // 기본 넉백 강도로 초기화
@@ -164,12 +158,15 @@ public class Enemy : MonoBehaviour
     // 죽을 때 처리 (1초 대기 후 객체 파괴)
     private IEnumerator HandleDeath()
     {
-        // 1초 동안 애니메이션을 재생
-        yield return new WaitForSeconds(0.5f);  // 1초 대기
+        // 체력 바 숨김 처리
+        hpBar.gameObject.SetActive(false);
 
-        // 객체를 파괴
+        // 죽음 애니메이션 재생 (0.6초 대기)
+        yield return new WaitForSeconds(0.6f);
+
+        // 적 객체와 체력 바 완전히 삭제
         Destroy(gameObject);
-        Destroy(hpBar.gameObject);  // 체력 바도 파괴
+        Destroy(hpBar.gameObject);
     }
 
     private void SetEnemyStatus(string _enemyName, int _maxHp, int _atkDmg, int _atkSpeed)
