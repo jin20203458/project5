@@ -2,14 +2,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class HeroKnight : MonoBehaviour
+public class HeroKnight1 : MonoBehaviour
 {
     // [Header] 속성을 이용해 인스펙터에서 보기 좋게 카테고리화
     [Header("속성")]
     [SerializeField] float m_speed = 4.0f;           // 이동 속도
     [SerializeField] float m_jumpForce = 7.5f;       // 점프 힘
-    [SerializeField] float m_rollForce = 6.0f;       // 구르기 힘
-    [SerializeField] bool m_noBlood = false;         // 피 이펙트 활성화 여부
+    //[SerializeField] float m_rollForce = 6.0f;       // 구르기 힘
+    //[SerializeField] bool m_noBlood = false;         // 피 이펙트 활성화 여부
     [SerializeField] GameObject m_slideDust;         // 슬라이딩 시 먼지 이펙트
 
     // 캐릭터 컴포넌트 및 상태 관련 변수들
@@ -25,7 +25,7 @@ public class HeroKnight : MonoBehaviour
     private int m_facingDirection = 1;                // 캐릭터가 보는 방향 (1: 오른쪽, -1: 왼쪽)
     private int m_currentAttack = 1;                  // 공격 콤보 단계
     private float m_timeSinceAttack = 0.0f;           // 마지막 공격 후 경과 시간
-    private float m_delayToIdle = 0.0f;               // Idle 상태로 돌아가는 딜레이
+    //private float m_delayToIdle = 0.0f;               // Idle 상태로 돌아가는 딜레이
     private float m_rollDuration = 8.0f / 14.0f;      // 구르기 지속 시간
     private float m_rollCurrentTime = 0.0f;           // 현재 구르기 경과 시간
 
@@ -162,7 +162,7 @@ public class HeroKnight : MonoBehaviour
         Collider2D[] colliders = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
         foreach (Collider2D collider in colliders)
         {
-            if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider))
+            if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider) )
             {
                 collider.GetComponent<Enemy>().TakeDamage(20); // 적에게 데미지 전달
                 hitEnemies.Add(collider); // 중복 타격 방지
