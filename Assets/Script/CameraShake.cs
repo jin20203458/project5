@@ -12,7 +12,6 @@ public class CameraShake : MonoBehaviour
 
     private void Start()
     {
-        originalPosition = transform.position;  // 카메라의 원래 위치 저장
         if (player == null)
         {
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -21,6 +20,9 @@ public class CameraShake : MonoBehaviour
 
     public void ShakeCamera()
     {
+        // 흔들림을 시작하기 전에 현재 카메라 위치를 저장
+        originalPosition = transform.position;
+
         // 공격할 때마다 카메라 흔들림 발생
         StartCoroutine(Shake());
     }
@@ -33,16 +35,17 @@ public class CameraShake : MonoBehaviour
         {
             // 카메라의 원래 위치에서 랜덤한 위치로 이동시켜 강렬한 흔들림 효과 생성
             float shakeX = Random.Range(-shakeAmount, shakeAmount);
+            // Y축은 원래 위치 유지
             float shakeY = Random.Range(-shakeAmount, shakeAmount);
 
             // 카메라는 플레이어를 따라가며 흔들림 적용
-            transform.position = new Vector3(player.position.x + shakeX, player.position.y + shakeY, transform.position.z);
+            transform.position = new Vector3(player.position.x + shakeX, originalPosition.y + shakeY, transform.position.z);
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         // 흔들림이 끝난 후 카메라는 바로 플레이어를 추적하도록 유지
-        transform.position = new Vector3(player.position.x, player.position.y, transform.position.z);
+        transform.position = new Vector3(player.position.x, originalPosition.y, transform.position.z);
     }
 }
