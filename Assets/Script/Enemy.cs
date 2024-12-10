@@ -1,23 +1,44 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class Enemy : MonoBehaviour
 {
+    Rigidbody2D rigid;
+    SpriteRenderer SpriteRenderer;
+    RectTransform hpBar;
+    Image nowHpbar;
+    Transform player;
+    Animator anim;
+
     public GameObject prfHpBar;
     public GameObject canvas;
-    RectTransform hpBar;
     public string enemyName;
     public int maxHp;
     public int nowHp;
     public int atkDmg;
     public int atkSpeed;
-    public float moveSpeed = 3f;
-    Image nowHpbar;
+    public float moveSpeed = 3f; // 기본 이동 속도
     public float height = 1.7f;
     public float detectionRange = 5f;
+    public int nextMove;
+    public CameraShake cameraShake;
+    public float baseKnockbackForce = 6f;
 
-    Transform player;
+   
     bool isChasing = false;
+    private Vector3 initialPosition;
+    private int attackCount = 0;  // 공격 횟수를 추적하는 변수
+    private float currentKnockbackForce;     // 현재 적용된 넉백 강도 (3타 후 고정값 적용)
+
+
+    private void Awake()
+    {
+        anim = GetComponent<Animator>();
+        rigid = GetComponent<Rigidbody2D>();
+        SpriteRenderer = GetComponent<SpriteRenderer>();
+    }
 
     void Start()
     {
@@ -52,6 +73,9 @@ public class Enemy : MonoBehaviour
         {
             Debug.LogError("Player object not found!");
         }
+        initialPosition = transform.position;
+        // 게임 시작 시 기본 넉백 강도로 초기화
+        currentKnockbackForce = baseKnockbackForce;
     }
 
     void Update()
@@ -67,19 +91,82 @@ public class Enemy : MonoBehaviour
         }
 
         // 플레이어 탐지 및 추적
-        DetectAndChasePlayer();
+        if (isChangingDirection == false && nowHp > 0)
+            DetectAndChasePlayer();
     }
 
     public void TakeDamage(int damage)
     {
-        nowHp -= damage;
-        Debug.Log("Damage taken: " + damage + ", Remaining HP: " + nowHp);
+        // 이미 죽는 중이면 추가 피해를 무시
+        if (anim.GetBool("isDead")) return;
 
+        // 체력 감소
+        nowHp -= damage;
+
+        // 체력이 0 이하일 경우 즉시 죽음 처리
         if (nowHp <= 0)
         {
-            Destroy(gameObject);
-            Destroy(hpBar.gameObject);
+            nowHp = 0; // 체력을 0으로 고정
+            anim.SetBool("isHunt", false); // 피격 애니메이션 해제
+            anim.SetBool("isDead", true);  // 죽음 애니메이션 트리거
+
+            Debug.Log($"Enemy {enemyName} is dead."); // 디버그 메시지
+            StartCoroutine(HandleDeath()); // 죽음 처리 코루틴 호출
+            return; // 함수 종료
         }
+
+        // 체력이 남아 있는 경우 피격 처리
+        Debug.Log($"Damage taken: {damage}, Remaining HP: {nowHp}");
+
+        // 피격 애니메이션 트리거
+        if (!anim.GetBool("isHunt"))
+        {
+            anim.SetBool("isHunt", true); // 피격 상태 시작
+        }
+
+        // 넉백 처리 (피격 시 밀려나는 효과)
+        Vector2 knockbackDirection = (transform.position - player.position).normalized;
+
+        // 넉백 강도 설정 (기본 또는 3타 공격에서의 강도)
+        rigid.velocity = Vector2.zero; // 현재 속도를 초기화
+        rigid.AddForce(knockbackDirection * currentKnockbackForce, ForceMode2D.Impulse);
+
+        StartCoroutine(ResetKnockback());
+
+        // 공격 횟수 증가
+        attackCount++;
+
+        // 3번째 공격마다 카메라 흔들림 발생
+        if (attackCount == 3)
+        {
+            cameraShake.ShakeCamera(); // 카메라 흔들림 실행
+            currentKnockbackForce = 8f; // 3번째 공격 넉백 강도 고정
+            attackCount = 0; // 공격 횟수 초기화
+        }
+    }
+
+
+    // 넉백 초기화
+    private IEnumerator ResetKnockback()
+    {
+        yield return new WaitForSeconds(0.1f); // 0.1초 후 넉백 상태 초기화
+        anim.SetBool("isHunt", false);
+        // 넉백 강도를 기본값으로 되돌림
+        currentKnockbackForce = baseKnockbackForce; // 기본 넉백 강도로 초기화
+    }
+
+    // 죽을 때 처리 (1초 대기 후 객체 파괴)
+    private IEnumerator HandleDeath()
+    {
+        // 체력 바 숨김 처리
+        hpBar.gameObject.SetActive(false);
+
+        // 죽음 애니메이션 재생 (0.6초 대기)
+        yield return new WaitForSeconds(0.6f);
+
+        // 적 객체와 체력 바 완전히 삭제
+        Destroy(gameObject);
+        Destroy(hpBar.gameObject);
     }
 
     private void SetEnemyStatus(string _enemyName, int _maxHp, int _atkDmg, int _atkSpeed)
@@ -100,31 +187,67 @@ public class Enemy : MonoBehaviour
         // 플레이어가 탐지 범위 안에 있을 경우에만 추적
         if (distanceToPlayer <= detectionRange)
         {
-            isChasing = true;
+            isChasing = true; // 플레이어가 범위 안에 있으면 추적 시작
         }
         else
         {
-            isChasing = false;
+            isChasing = false; // 범위 밖이면 추적 멈춤
         }
 
         // 플레이어를 추적
         if (isChasing)
         {
-            Vector2 direction = (player.position - transform.position).normalized;
-            transform.position = Vector2.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
-            LookAtPlayer();
+            Vector2 frontVec = new Vector2(rigid.position.x + nextMove * 0.5f, rigid.position.y);
+            RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector3.down, 3, LayerMask.GetMask("Platform"));
+
+            if (rayHit.collider == null && !isChangingDirection) // 벽 끝에 닿은 경우 (반복하지 않도록)
+            {
+                MoveAwayAndRetry(); // 벽 끝에서 처리하는 로직 호출
+                isChangingDirection = true; // 반대 방향으로 이동 중임을 표시
+            }
+            else
+            {
+                // 추적 로직
+                Vector3 direction = (player.position - transform.position).normalized;
+                transform.position = Vector3.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
+                LookAtPlayer();
+            }
         }
+    }
+
+    private bool isChangingDirection = false; // 벽 끝에 닿을 때 이동 상태 관리
+
+    private void MoveAwayAndRetry()
+    {
+        Debug.Log("Hit wall, stopping movement for a moment.");
+
+        // 이동 속도를 0으로 설정하여 멈춤
+        moveSpeed = 0f;
+
+        // 잠시 멈춘 후 추적을 재개
+        StartCoroutine(ResumeMovementAfterDelay()); // 일정 시간 후 이동을 재개하는 코루틴 호출
+    }
+
+    private IEnumerator ResumeMovementAfterDelay()
+    {
+        yield return new WaitForSeconds(2f); // 1초 동안 대기
+
+        moveSpeed = 3f; // 기본 이동 속도 (원하는 값으로 설정)
+        transform.position = Vector3.MoveTowards(transform.position, initialPosition, Time.deltaTime * 5f);
+        isChangingDirection = false; // 다시 추적을 시작할 수 있도록 상태 변경
     }
 
     private void LookAtPlayer()
     {
         if (player.position.x > transform.position.x)
         {
-            transform.localScale = new Vector3(1, 1, 1);
+            // 플레이어가 오른쪽에 있으면
+            transform.localScale = new Vector3(1, 1, 1); // 오른쪽으로 반전
         }
         else
         {
-            transform.localScale = new Vector3(-1, 1, 1);
+            // 플레이어가 왼쪽에 있으면
+            transform.localScale = new Vector3(-1, 1, 1); // 왼쪽으로 반전
         }
     }
 
