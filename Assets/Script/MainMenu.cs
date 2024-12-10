@@ -4,31 +4,33 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
-public class MainMenu : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler
+public class MainMenu : MonoBehaviour//,IPointerEnterHandler,IPointerExitHandler
 {
-
-    public enum BTNType
-    {
-        New,
-        Contiune,
-        Option,
-        Sound,
-        Back,
-        Quit
-    }
-
+    /*
+        public enum BTNType
+        {
+            New,
+            Contiune,
+            Option,
+            Sound,
+            Back,
+            Quit
+        }
+    
     public Transform buttonScale;
     Vector3 defaultScale;
-
+   
     private void Start()
     {
         defaultScale = buttonScale.localScale;
     }
-
+     */
     public void OnClickNewGame()
     {
         Debug.Log("ªı ∞‘¿”");
+        SceneManager.LoadScene("SampleScene");
     }
 
     public void OnClickLoad()
@@ -52,7 +54,7 @@ public class MainMenu : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler
 
 
     }
-
+    /*
     public void OnPointerEnter(PointerEventData eventData)
     {
         buttonScale.localScale = defaultScale * 1.2f;
@@ -62,5 +64,6 @@ public class MainMenu : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler
     {
         buttonScale.localScale = defaultScale;
     }
+    */
 }
 
