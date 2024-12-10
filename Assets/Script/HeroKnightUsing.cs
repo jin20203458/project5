@@ -1,10 +1,18 @@
 ﻿using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement; // 씬을 다시 로드하기 위해 추가
+
 
 public class HeroKnightUsing : MonoBehaviour
 {
+    public bool isDead = false;
+    private bool m_canDoubleJump = false; // 더블 점프 가능 여부
+    private bool m_canPerformDoubleJump = false;
+
     [Header("속성")]
+    [SerializeField] float m_attackPower = 10.0f;    // 공격력
     [SerializeField] float m_speed = 4.0f;           // 이동 속도
     [SerializeField] float m_jumpForce = 7.5f;       // 점프 힘
     [SerializeField] float m_rollForce = 6.0f;       // 구르기 힘
@@ -35,23 +43,65 @@ public class HeroKnightUsing : MonoBehaviour
     public Vector2 boxSize;                           // 공격 범위 크기
     public float attackDuration = 0.2f;               // 공격 속도
 
+    RectTransform hpBar;
+    Image nowHpbar;
+    public GameObject prfHpBar;
+    public GameObject canvas;
+    public float height = 1.7f;
+
+    [Header("체력 및 피해")]
+    [SerializeField] private float maxHealth = 100;      // 최대 체력
+    private float currentHealth;                         // 현재 체력
+
+    [SerializeField] private float invincibilityDuration = 1.0f; // 무적 시간
+    private bool isInvincible = false;                 // 무적 상태 여부
+    private float invincibilityTimer = 0.0f;           // 무적 시간 타이머
+
 
     void Start()
     {
+        currentHealth = maxHealth;
         // 필요한 컴포넌트 초기화
         m_animator = GetComponent<Animator>();
         m_body2d = GetComponent<Rigidbody2D>();
         m_groundSensor = transform.Find("GroundSensor").GetComponent<Sensor_HeroKnight>();
+
 
         // 벽 센서 초기화
         for (int i = 0; i < 4; i++)
         {
             m_wallSensors[i] = transform.Find("WallSensor_" + (i < 2 ? "R" : "L") + (i % 2 + 1)).GetComponent<Sensor_HeroKnight>();
         }
+
+        // 체력 바 초기화 (각 적에 대해 독립적으로 생성)
+        hpBar = Instantiate(prfHpBar, canvas.transform).GetComponent<RectTransform>();
+
+        // 체력 바의 이미지 초기화
+        nowHpbar = hpBar.transform.GetChild(0).GetComponent<Image>();
+
+        // 초기화된 값 확인 (디버깅용)
+        //Debug.Log($"Enemy Name: {enemyName}, Max HP: {maxHp}, Current HP: {nowHp}");
+
     }
 
     void Update()
     {
+
+        if (isDead) { return; } // 플레이어가 죽으면 아래 코드 실행하지 않음
+
+        // 체력 바 위치 갱신
+        Vector3 _hpBarPos = Camera.main.WorldToScreenPoint(new Vector3(transform.position.x, transform.position.y + height, 0));
+        hpBar.position = _hpBarPos;
+
+
+        if (nowHpbar != null) // nowHpbar가 null이 아닌 경우에만 갱신
+        {
+            nowHpbar.fillAmount = (float)currentHealth / (float)maxHealth;
+        }
+
+       
+       
+
         // 타이머 업데이트
         m_timeSinceAttack += Time.deltaTime; // 공격 후 경과 시간 갱신
         if (m_rolling)
@@ -70,8 +120,98 @@ public class HeroKnightUsing : MonoBehaviour
 
         HandleAnimations(); // 애니메이션 처리
     }
+    // 속성 값 변경하는 메소드
+    public void SetCharacterAttribute(string attribute)
+    {
+        if (attribute == "speed")
+        {
+            m_speed *= 1.3f; // 이동 속도 1.3배 증가
+            Debug.Log("이동 속도 1.3배 증가");
+        }
+        else if (attribute == "attack")
+        {
+            m_attackPower *= 1.5f; // 공격력 1.3배 증가
+            Debug.Log("공격력 1.5배 증가");
+        }
+        else if (attribute == "health")
+        {
+            maxHealth *= 1.3f; // 최대 체력 1.3배 증가
+            currentHealth = maxHealth; // 현재 체력도 최대 체력에 맞춰 조정
+            Debug.Log("체력 1.3배 증가");
+        }
+        else if(attribute =="random")
+        {
+            m_canDoubleJump = true;
+            Debug.Log("축하합니다! 더블점프 해금");
+        }
+    }
 
-    private void FixedUpdate()
+
+    // 데미지를 받는 함수
+    public void TakeDamage(int damage)
+    {
+        if (isDead) { return; }
+        // 디버그 메시지 출력
+        Debug.Log("아파!");
+       // if (isInvincible || currentHealth <= 0) return; // 무적 상태에서는 데미지를 받지 않음
+
+        currentHealth -= damage; // 체력 감소
+        m_animator.SetTrigger("Hurt"); // 데미지 애니메이션 트리거
+
+        // 체력이 0 이하일 경우
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            isDead = true;  // 플레이어가 죽었음을 상태로 설정
+            Die(); // 사망 처리
+        }
+
+        // 무적 상태 활성화
+       // isInvincible = true;
+
+        // 디버그 메시지 출력
+        Debug.Log("체력이 " + damage + "만큼 감소, 현재 체력: " + currentHealth);
+    }
+
+    // 사망 처리 함수
+    private void Die()
+    {
+       
+        if (nowHpbar != null) // nowHpbar가 null이 아닌 경우에만 갱신
+        {
+            nowHpbar.fillAmount = (float)currentHealth / (float)maxHealth;
+        }
+        m_animator.SetTrigger("Death"); // 사망 애니메이션 트리거
+        Debug.Log("캐릭터가 사망했습니다.");
+
+        // 사망 애니메이션이 끝날 때까지 기다린 후 씬을 다시 로드
+        StartCoroutine(WaitForDeathAnimation());
+    }
+
+    // 사망 애니메이션 후 기다리는 코루틴
+    private IEnumerator WaitForDeathAnimation()
+    {
+        // 사망 애니메이션의 길이를 가져오기
+        float deathAnimationDuration = 3.0f; // 예시로 3초 설정
+
+        // 애니메이션이 끝날 때까지 기다림
+        yield return new WaitForSeconds(deathAnimationDuration);
+
+        // 게임 오버 후 씬을 처음부터 다시 시작
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // 현재 씬을 다시 로드
+        Debug.Log("다시 모험을 떠나요!!");
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // 적과 충돌 시 데미지 처리
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            TakeDamage(10); // 예: 적과 충돌 시 10 데미지
+        }
+    }
+
+private void FixedUpdate()
     {
         HandleMovement(); // 이동 처리
 
@@ -109,6 +249,7 @@ public class HeroKnightUsing : MonoBehaviour
 
     private void HandleMovement()
     {
+        if (isDead) { return; } // 플레이어가 죽으면 아래 코드 실행하지 않음
         float inputX = Input.GetAxis("Horizontal");
 
         // 구르기 중에 y축 속도를 0으로 고정
@@ -141,6 +282,7 @@ public class HeroKnightUsing : MonoBehaviour
     // 애니메이션 처리 (방향 고정)
     private void HandleAnimations()
     {
+
         // 벽에 붙어 있는지 체크
         m_isWallSliding = (m_wallSensors[0].State() && m_wallSensors[1].State()) || (m_wallSensors[2].State() && m_wallSensors[3].State());
         m_animator.SetBool("WallSlide", m_isWallSliding);
@@ -159,9 +301,9 @@ public class HeroKnightUsing : MonoBehaviour
         }
         else if (Input.GetMouseButtonUp(1)) m_animator.SetBool("IdleBlock", false);
         // 구르기 입력 시
-        else if (Input.GetKeyDown("left shift") && !m_rolling && !m_isWallSliding)
+        else if (Input.GetKeyDown("left shift") && !m_rolling && !m_isWallSliding && m_grounded)
         {
-            // 구르기 시작
+            // 땅에 닿아 있을 때만 구르기 가능
             m_rolling = true;
             m_animator.SetTrigger("Roll");
 
@@ -172,14 +314,27 @@ public class HeroKnightUsing : MonoBehaviour
             // 구르기 지속 시간 늘리기 (기존 시간을 조금 늘려서 구를 때 더 멀리 이동)
             m_rollDuration = 0.25f; // 기존보다 약간 더 길게 (예시로 0.25초로 설정)
             m_rollCurrentTime = 0.0f;
-
         }
-        else if (Input.GetKeyDown("space") && m_grounded && !m_rolling)
+        else if (Input.GetKeyDown("space") && (m_grounded || m_canPerformDoubleJump) && !m_rolling)
         {
             m_animator.SetTrigger("Jump");
-            m_grounded = false;
-            m_animator.SetBool("Grounded", m_grounded);
+
+            if (m_grounded)
+            {
+                // 첫 번째 점프
+                m_grounded = false;  // 바닥에 있지 않다고 설정
+                m_animator.SetBool("Grounded", m_grounded);
+                m_canPerformDoubleJump = m_canDoubleJump;  // 더블 점프 가능 여부를 갱신
+            }
+            else if (m_canPerformDoubleJump)  // 더블 점프 실행
+            {
+                m_canPerformDoubleJump = false;  // 더블 점프는 한 번만 가능
+            }
+
+            // 점프 동작
             m_body2d.velocity = new Vector2(m_body2d.velocity.x, m_jumpForce);
+
+            // 바닥 센서를 약간 비활성화 (0.2초 동안)
             m_groundSensor.Disable(0.2f);
         }
         else if (Mathf.Abs(Input.GetAxis("Horizontal")) > Mathf.Epsilon)
@@ -273,7 +428,7 @@ public class HeroKnightUsing : MonoBehaviour
         {
             if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider))
             {
-                collider.GetComponent<Enemy>().TakeDamage(20); // 피해 적용
+                collider.GetComponent<Enemy>().TakeDamage(m_attackPower); // 피해 적용
                 hitEnemies.Add(collider); // 타격된 적으로 등록
             }
         }
