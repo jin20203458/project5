@@ -15,9 +15,9 @@ public class Enemy : MonoBehaviour
     public GameObject prfHpBar;
     public GameObject canvas;
     public string enemyName;
-    public int maxHp;
-    public int nowHp;
-    public int atkDmg;
+    public float maxHp;
+    public float nowHp;
+    public int atkDmg=10;
     public int atkSpeed;
     public float moveSpeed = 3f; // 기본 이동 속도
     public float height = 1.7f;
@@ -95,7 +95,36 @@ public class Enemy : MonoBehaviour
             DetectAndChasePlayer();
     }
 
-    public void TakeDamage(int damage)
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        Debug.Log("충돌 감지: " + collision.gameObject.name);
+
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            HeroKnightUsing player = collision.gameObject.GetComponent<HeroKnightUsing>();
+            if (player != null)
+            {
+                // 플레이어가 살아 있을 때만 데미지를 입힘
+                if (!player.isDead)
+                {
+                    player.TakeDamage(atkDmg);
+                    Debug.Log($"{enemyName}가 플레이어에게 {atkDmg}만큼 공격했습니다.");
+                }
+                else
+                {
+                    Debug.Log($"{enemyName}가 공격하려 했지만 플레이어는 이미 죽었습니다.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("플레이어의 HeroKnightUsing 컴포넌트를 찾을 수 없습니다.");
+            }
+        }
+    }
+
+
+
+    public void TakeDamage(float damage)
     {
         // 이미 죽는 중이면 추가 피해를 무시
         if (anim.GetBool("isDead")) return;
@@ -162,7 +191,7 @@ public class Enemy : MonoBehaviour
         hpBar.gameObject.SetActive(false);
 
         // 죽음 애니메이션 재생 (0.6초 대기)
-        yield return new WaitForSeconds(0.6f);
+        yield return new WaitForSeconds(2.5f);
 
         // 적 객체와 체력 바 완전히 삭제
         Destroy(gameObject);
@@ -181,6 +210,14 @@ public class Enemy : MonoBehaviour
     private void DetectAndChasePlayer()
     {
         if (player == null) return;
+
+        // 플레이어가 죽었는지 확인
+        HeroKnightUsing playerScript = player.GetComponent<HeroKnightUsing>();
+        if (playerScript != null && playerScript.isDead)
+        {
+            isChasing = false; // 플레이어가 죽었으면 추적을 멈춤
+            return; // 추적을 멈추고 더 이상 진행하지 않음
+        }
 
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
@@ -214,6 +251,7 @@ public class Enemy : MonoBehaviour
             }
         }
     }
+
 
     private bool isChangingDirection = false; // 벽 끝에 닿을 때 이동 상태 관리
 
