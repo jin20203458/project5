@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement; // 씬을 다시 로드하기 위해 추가
 
 public class HeroKnightUsing : MonoBehaviour
 {
+    public static HeroKnightUsing singleton;
+
     public bool isDead = false;
     private bool m_canDoubleJump = false; // 더블 점프 가능 여부
     private bool m_canPerformDoubleJump = false;
@@ -16,6 +18,8 @@ public class HeroKnightUsing : MonoBehaviour
     [SerializeField] float m_speed = 4.0f;           // 이동 속도
     [SerializeField] float m_jumpForce = 7.5f;       // 점프 힘
     [SerializeField] float m_rollForce = 6.0f;       // 구르기 힘
+    [SerializeField] float m_attackKnockback = 8.0f;       // 플레이어가 몬스터 공격 시 넉백
+    [SerializeField] float m_attackKnockbackThird = 800.0f;       // 플레이어가 몬스터 공격 시 넉백(3타 공격)
     //[SerializeField] bool m_noBlood = false;         // 피 여부
     [SerializeField] GameObject m_slideDust;         // 슬라이딩 먼지 이펙트
 
@@ -29,6 +33,7 @@ public class HeroKnightUsing : MonoBehaviour
     private bool m_rolling = false;                   // 구르고 있는지 여부
     private int m_facingDirection = 1;                // 캐릭터가 보는 방향
     private int m_currentAttack = 1;                  // 현재 공격 상태 (콤보)
+    private int m_attackCount = 0;
     private float m_timeSinceAttack = 0.0f;           // 공격 후 시간
     private float m_delayToIdle = 0.0f;               // 아이들로 돌아가는 딜레이
     private float m_rollDuration = 8.0f / 14.0f;      // 구르기 지속 시간
@@ -57,9 +62,14 @@ public class HeroKnightUsing : MonoBehaviour
     private bool isInvincible = false;                 // 무적 상태 여부
     private float invincibilityTimer = 0.0f;           // 무적 시간 타이머
 
+    [SerializeField] private CameraShake cameraShake;
+
+
 
     void Start()
     {
+        singleton = this;
+
         currentHealth = maxHealth;
         // 필요한 컴포넌트 초기화
         m_animator = GetComponent<Animator>();
@@ -174,7 +184,7 @@ public class HeroKnightUsing : MonoBehaviour
     }
 
     // 사망 처리 함수
-    private void Die()
+    public void Die()
     {
        
         if (nowHpbar != null) // nowHpbar가 null이 아닌 경우에만 갱신
@@ -204,11 +214,12 @@ public class HeroKnightUsing : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        // 적과 충돌 시 데미지 처리
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            TakeDamage(10); // 예: 적과 충돌 시 10 데미지
-        }
+        // 적과 충돌 시 데미지 처리는 Enemy 클래스에 정의되어 있습니다
+
+        //if (collision.gameObject.CompareTag("Enemy"))
+        //{
+        //    TakeDamage(10); // 예: 적과 충돌 시 10 데미지
+        //}
     }
 
 private void FixedUpdate()
@@ -292,6 +303,7 @@ private void FixedUpdate()
         else if (Input.GetKeyDown("q") && !m_rolling) m_animator.SetTrigger("Hurt");
         else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > attackDuration && !m_rolling && !m_isAttacking) // 공격 쿨타임 추가
         {
+            m_attackCount++;
             StartCoroutine(AttackCoroutine()); // 공격 코루틴 호출
         }
         else if (Input.GetMouseButtonDown(1) && !m_rolling)
@@ -417,6 +429,24 @@ private void FixedUpdate()
 
     private void Attack()
     {
+        // 공격 횟수 증가
+        
+
+        ParameterPlayerAttack attackArgument = new ParameterPlayerAttack();
+        attackArgument.damage = ((m_attackCount == 3) ? m_attackPower * 1.5f : m_attackPower);
+        attackArgument.knockback = ((m_attackCount == 3) ? m_attackKnockbackThird : m_attackKnockback);
+
+        // 3번째 공격마다 카메라 흔들림 발생
+        if (m_attackCount == 3)
+        {
+            Debug.Log($"Attack() : 카메라 셰이크 - {m_attackCount}");
+
+            cameraShake.ShakeCamera(); // 카메라 흔들림 실행
+            m_attackCount = 0; // 공격 횟수 초기화
+        }
+
+
+
         // 공격 박스 위치 조정
         Vector3 attackBoxPosition = pos.position;
         if (m_facingDirection == -1)
@@ -428,7 +458,7 @@ private void FixedUpdate()
         {
             if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider))
             {
-                collider.GetComponent<Enemy>().TakeDamage(m_attackPower); // 피해 적용
+                collider.GetComponent<Enemy>().TakeDamage(attackArgument); // 피해 적용
                 hitEnemies.Add(collider); // 타격된 적으로 등록
             }
         }
