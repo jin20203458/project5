@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
 
     public void NextStage()
     {
+
         stageIndex++;
 
         totalPoint += stagePoint;
@@ -23,10 +24,12 @@ public class GameManager : MonoBehaviour
     {
         if (collision.gameObject.tag == "Player")
         {
-            health--;
+            HeroKnightUsing.singleton.Die();
+
 
             collision.attachedRigidbody.velocity = Vector2.zero;
             collision.transform.position = new Vector3(0, 0, -1);
+
         }
 
 

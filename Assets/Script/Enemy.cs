@@ -25,13 +25,14 @@ public class Enemy : MonoBehaviour
     public int nextMove;
     public CameraShake cameraShake;
     public float baseKnockbackForce = 6f;
-
+    [SerializeField] Vector3 scale = new Vector3(1, 1, 1);
+    [SerializeField] float scalex;
    
     bool isChasing = false;
     private Vector3 initialPosition;
     private int attackCount = 0;  // 공격 횟수를 추적하는 변수
     private float currentKnockbackForce;     // 현재 적용된 넉백 강도 (3타 후 고정값 적용)
-
+    private bool isEnemyDead = false;
 
     private void Awake()
     {
@@ -44,7 +45,7 @@ public class Enemy : MonoBehaviour
     {
         // 체력 바 초기화 (각 적에 대해 독립적으로 생성)
         hpBar = Instantiate(prfHpBar, canvas.transform).GetComponent<RectTransform>();
-
+        scalex = scale.x;
         // 적 상태 설정
         if (name.Equals("Enemy1"))
         {
@@ -98,8 +99,14 @@ public class Enemy : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Debug.Log("충돌 감지: " + collision.gameObject.name);
+        
+        if (isEnemyDead)
+        {
+            Debug.Log("OnCollisionEnter2D : 사망함!");
+            return;
+        }
 
-        if (collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("Player") && (isEnemyDead == false))
         {
             HeroKnightUsing player = collision.gameObject.GetComponent<HeroKnightUsing>();
             if (player != null)
@@ -124,28 +131,23 @@ public class Enemy : MonoBehaviour
 
 
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(ParameterPlayerAttack argument)
     {
         // 이미 죽는 중이면 추가 피해를 무시
         if (anim.GetBool("isDead")) return;
 
         // 체력 감소
-        nowHp -= damage;
+        nowHp -= argument.damage;
 
         // 체력이 0 이하일 경우 즉시 죽음 처리
         if (nowHp <= 0)
         {
-            nowHp = 0; // 체력을 0으로 고정
-            anim.SetBool("isHunt", false); // 피격 애니메이션 해제
-            anim.SetBool("isDead", true);  // 죽음 애니메이션 트리거
-
-            Debug.Log($"Enemy {enemyName} is dead."); // 디버그 메시지
-            StartCoroutine(HandleDeath()); // 죽음 처리 코루틴 호출
+            HandleWhenDead();
             return; // 함수 종료
         }
 
         // 체력이 남아 있는 경우 피격 처리
-        Debug.Log($"Damage taken: {damage}, Remaining HP: {nowHp}");
+        Debug.Log($"Damage taken: {argument.damage}, Remaining HP: {nowHp}");
 
         // 피격 애니메이션 트리거
         if (!anim.GetBool("isHunt"))
@@ -158,22 +160,33 @@ public class Enemy : MonoBehaviour
 
         // 넉백 강도 설정 (기본 또는 3타 공격에서의 강도)
         rigid.velocity = Vector2.zero; // 현재 속도를 초기화
-        rigid.AddForce(knockbackDirection * currentKnockbackForce, ForceMode2D.Impulse);
+        rigid.AddForce(knockbackDirection * argument.knockback, ForceMode2D.Impulse);
 
         StartCoroutine(ResetKnockback());
 
-        // 공격 횟수 증가
-        attackCount++;
+        //// 공격 횟수 증가
+        //attackCount++;
 
-        // 3번째 공격마다 카메라 흔들림 발생
-        if (attackCount == 3)
-        {
-            cameraShake.ShakeCamera(); // 카메라 흔들림 실행
-            currentKnockbackForce = 8f; // 3번째 공격 넉백 강도 고정
-            attackCount = 0; // 공격 횟수 초기화
-        }
+        //// 3번째 공격마다 카메라 흔들림 발생
+        //if (attackCount == 3)
+        //{
+        //    cameraShake.ShakeCamera(); // 카메라 흔들림 실행
+        //    currentKnockbackForce = 8f; // 3번째 공격 넉백 강도 고정
+        //    attackCount = 0; // 공격 횟수 초기화
+        //}
     }
 
+    private void HandleWhenDead()
+    {
+        isEnemyDead = true;
+
+        nowHp = 0; // 체력을 0으로 고정
+        anim.SetBool("isHunt", false); // 피격 애니메이션 해제
+        anim.SetBool("isDead", true);  // 죽음 애니메이션 트리거
+
+        Debug.Log($"Enemy {enemyName} is dead."); // 디버그 메시지
+        StartCoroutine(HandleDeath()); // 죽음 처리 코루틴 호출
+    }
 
     // 넉백 초기화
     private IEnumerator ResetKnockback()
@@ -191,7 +204,7 @@ public class Enemy : MonoBehaviour
         hpBar.gameObject.SetActive(false);
 
         // 죽음 애니메이션 재생 (0.6초 대기)
-        yield return new WaitForSeconds(2.5f);
+        yield return new WaitForSeconds(2f);
 
         // 적 객체와 체력 바 완전히 삭제
         Destroy(gameObject);
@@ -280,12 +293,14 @@ public class Enemy : MonoBehaviour
         if (player.position.x > transform.position.x)
         {
             // 플레이어가 오른쪽에 있으면
-            transform.localScale = new Vector3(1, 1, 1); // 오른쪽으로 반전
+            scale.x = scalex;
+            transform.localScale = scale * (nowHp / maxHp); // 오른쪽으로 반전
         }
         else
         {
             // 플레이어가 왼쪽에 있으면
-            transform.localScale = new Vector3(-1, 1, 1); // 왼쪽으로 반전
+            scale.x = -scalex;
+            transform.localScale = scale * (nowHp / maxHp); // 왼쪽으로 반전
         }
     }
 
