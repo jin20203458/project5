@@ -13,6 +13,7 @@ public class Enemy : MonoBehaviour
 
     public GameObject prfHpBar;
     public GameObject canvas;
+    public GameObject markPrefab;
     public string enemyName;
     public float maxHp;
     public float nowHp;
@@ -20,6 +21,7 @@ public class Enemy : MonoBehaviour
     public float moveSpeed = 3f;
     public float height = 1.7f;
     public float detectionRange = 5f;
+    public float markYOffset = 1f;  
     protected Vector3 initialPosition;
 
     protected bool isChasing = false;
@@ -156,6 +158,11 @@ public class Enemy : MonoBehaviour
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         if (distanceToPlayer <= detectionRange)
         {
+            if (!isChasing) // 플레이어를 처음 탐지했을 때만 마크를 소환
+            {
+                SpawnMark();
+            }
+
             isChasing = true;
             Vector3 direction = (player.position - transform.position).normalized;
             transform.position = Vector3.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
@@ -166,6 +173,32 @@ public class Enemy : MonoBehaviour
             isChasing = false;
         }
     }
+    private void SpawnMark()
+    {
+        if (markPrefab != null)
+        {
+            // 마커를 생성할 위치를 적의 위치에서 markYOffset만큼 Y축으로 올림
+            Vector3 spawnPosition = transform.position + new Vector3(0, markYOffset, 0); // markYOffset 값만큼 Y축으로 이동
+            GameObject markInstance = Instantiate(markPrefab, spawnPosition, Quaternion.identity);
+
+            // 생성된 마커가 에너미를 추적하도록 설정
+            Mark markScript = markInstance.GetComponent<Mark>();
+            if (markScript != null)
+            {
+                markScript.enemy = transform; // 마커가 에너미를 추적하도록 설정
+            }
+        }
+    }
+
+    private IEnumerator DestroyMarkAfterDelay(GameObject markInstance, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (markInstance != null)
+        {
+            Destroy(markInstance);
+        }
+    }
+
 
     protected virtual void LookAtPlayer()
     {
