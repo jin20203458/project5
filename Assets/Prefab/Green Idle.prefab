@@ -30,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 7225801057413021031}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -34.03, y: -3.1, z: 0}
+  m_LocalPosition: {x: 9.017121, y: -3.327744, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -122,18 +122,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prfHpBar: {fileID: 7735975493514810815, guid: 5f5b06d88e6e3274fb64245041f4c756, type: 3}
-  canvas: {fileID: 0}
+  canvas: {fileID: 6079934107266682192, guid: f76079ea69f585443b0aaab615b7f7e3, type: 3}
   enemyName: 
   maxHp: 0
   nowHp: 0
   atkDmg: 0
-  atkSpeed: 0
   moveSpeed: 3
   height: 1.7
   detectionRange: 8
-  nextMove: 0
-  cameraShake: {fileID: 0}
-  baseKnockbackForce: 6
 --- !u!70 &6445978465499299612
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -167,7 +163,7 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: -0.21}
-  m_Size: {x: 1.11, y: 0.69}
+  m_Size: {x: 1.25, y: 0.71}
   m_Direction: 1
 --- !u!50 &264479263066832190
 Rigidbody2D:
@@ -181,7 +177,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 2
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1

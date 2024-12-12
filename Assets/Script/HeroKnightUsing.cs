@@ -456,9 +456,16 @@ private void FixedUpdate()
         Collider2D[] colliders = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
         foreach (Collider2D collider in colliders)
         {
-            if (collider.CompareTag("Enemy") && !hitEnemies.Contains(collider))
+            // 적이 Enemy 태그일 경우
+            if (collider.CompareTag("Enemy"))
             {
-                collider.GetComponent<Enemy>().TakeDamage(attackArgument); // 피해 적용
+                collider.GetComponent<Enemy>()?.TakeDamage(attackArgument); // 피해 적용
+                hitEnemies.Add(collider); // 타격된 적으로 등록
+            }
+            // 적이 RedBoss 태그일 경우
+            else if (collider.CompareTag("Boss"))
+            {
+                collider.GetComponent<Boss>()?.TakeDamage(attackArgument); // 피해 적용
                 hitEnemies.Add(collider); // 타격된 적으로 등록
             }
         }
