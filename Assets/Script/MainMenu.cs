@@ -30,7 +30,7 @@ public class MainMenu : MonoBehaviour//,IPointerEnterHandler,IPointerExitHandler
     public void OnClickNewGame()
     {
         Debug.Log("ªı ∞‘¿”");
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("Floor3");
     }
 
     public void OnClickLoad()

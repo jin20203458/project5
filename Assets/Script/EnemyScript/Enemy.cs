@@ -32,6 +32,8 @@ public class Enemy : MonoBehaviour
     public float maxPatrolTime = 3f;  // 목표 지점에 도달하지 못한 상태에서 시간을 얼마나 기다릴지 설정 (초 단위)
 
 
+
+    private bool isInDamageState = false;
     protected bool isChasing = false;
     protected bool isEnemyDead = false;
     protected bool isTakingDamage = false;
@@ -69,16 +71,18 @@ public class Enemy : MonoBehaviour
     protected virtual void Update()
     {
         // 체력 바 위치 갱신
+        // 피격 중이라면 추격을 하지 않도록
+        if (!isInDamageState && nowHp > 0)  // 피격 상태가 아니고 살아있다면
+        {
+            if (player != null) DetectAndChasePlayer();
+        }
+
+        // 체력 바 위치 갱신
         Vector3 _hpBarPos = Camera.main.WorldToScreenPoint(new Vector3(transform.position.x, transform.position.y + height, 0));
         hpBar.position = _hpBarPos;
 
         // 체력 바 상태 갱신
         if (nowHpbar != null) nowHpbar.fillAmount = nowHp / maxHp;
-
-        if (nowHp > 0)
-        {
-            if (player != null) DetectAndChasePlayer();
-        }
     }
 
     public virtual void TakeDamage(ParameterPlayerAttack argument)
@@ -94,11 +98,22 @@ public class Enemy : MonoBehaviour
             return;
         }
 
+        // 피격 시 추격 중지
+        isInDamageState = true;  // 피격 상태로 전환
         anim.SetBool("isHunt", true);
         Vector2 knockbackDirection = (transform.position - player.position).normalized;
-        rigid.velocity = Vector2.zero;
-        rigid.AddForce(knockbackDirection * argument.knockback, ForceMode2D.Impulse);
+        rigid.velocity = Vector2.zero;  // 넉백 효과가 제대로 적용되도록 초기화
+        rigid.AddForce(knockbackDirection * argument.knockback, ForceMode2D.Impulse);  // 넉백
+
+        // 0.5초 후 추격을 재개
+        Invoke("ResumeChase", 0.5f);
+
         StartCoroutine(EndDamage());
+    }
+
+    private void ResumeChase()
+    {
+        isInDamageState = false;  // 피격 상태 해제
     }
 
     protected virtual IEnumerator EndDamage()
@@ -178,6 +193,7 @@ public class Enemy : MonoBehaviour
         // 목표 지점으로 이동 (배회 시 이동 속도를 0.7배로 설정)
         float adjustedMoveSpeed = moveSpeed * 0.7f;
         transform.position = Vector2.MoveTowards(transform.position, patrolTarget, adjustedMoveSpeed * Time.deltaTime);
+        anim.SetBool("isWalk", true);
         LookAtPatrolTarget();  // 이동 방향에 따라 회전
     }
 
@@ -201,7 +217,7 @@ public class Enemy : MonoBehaviour
 
     protected virtual void DetectAndChasePlayer()
     {
-        if (player == null) return;
+        if (player == null || isInDamageState) return;  // 피격 상태일 경우 추격하지 않음
 
         HeroKnightUsing playerScript = player.GetComponent<HeroKnightUsing>();
         if (playerScript != null && playerScript.isDead) // 플레이어 사망시 추격해제
@@ -223,8 +239,10 @@ public class Enemy : MonoBehaviour
             }
             else  // 절벽이 없으면 추격 계속
             {
+                anim.SetBool("isWalk", true);
                 Vector3 direction = (player.position - transform.position).normalized;  // 플레이어를 추격
                 transform.position = Vector3.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
+                
                 Debug.Log("플레이어 추적시작");
             }
 
@@ -234,6 +252,7 @@ public class Enemy : MonoBehaviour
         {
             Patrol();  // 플레이어가 없을 때 배회
             isChasing = false;
+            anim.SetBool("isWalk", false);
         }
     }
 

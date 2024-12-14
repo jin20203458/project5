@@ -8,7 +8,6 @@ using UnityEngine.SceneManagement; // 씬을 다시 로드하기 위해 추가
 public class HeroKnightUsing : MonoBehaviour
 {
     public static HeroKnightUsing singleton;
-
     public bool isDead = false;
     private bool m_canDoubleJump = false; // 더블 점프 가능 여부
     private bool m_canPerformDoubleJump = false;
@@ -210,16 +209,6 @@ public class HeroKnightUsing : MonoBehaviour
         // 게임 오버 후 씬을 처음부터 다시 시작
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); // 현재 씬을 다시 로드
         Debug.Log("다시 모험을 떠나요!!");
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        // 적과 충돌 시 데미지 처리는 Enemy 클래스에 정의되어 있습니다
-
-        //if (collision.gameObject.CompareTag("Enemy"))
-        //{
-        //    TakeDamage(10); // 예: 적과 충돌 시 10 데미지
-        //}
     }
 
 private void FixedUpdate()
