@@ -1,7 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
+using System.Collections.Generic;
 
 public class SelectUI : MonoBehaviour
 {
@@ -11,6 +11,7 @@ public class SelectUI : MonoBehaviour
     public Button randomButton;     // 무작위 버튼
 
     public HeroKnightUsing heroKnight;  // HeroKnightUsing 스크립트 참조
+    public RedSlimeKing boss;  // Boss 스크립트 참조
 
     private List<Button> buttons;  // 모든 버튼 리스트
 
@@ -24,6 +25,13 @@ public class SelectUI : MonoBehaviour
         attackButton.onClick.AddListener(() => OnAnyButtonClicked("attack"));
         healthButton.onClick.AddListener(() => OnAnyButtonClicked("health"));
         randomButton.onClick.AddListener(() => OnAnyButtonClicked("random"));
+
+        // 보스의 죽음을 감지하는 이벤트 연결
+        if (boss != null)
+        {
+            boss.OnBossDeath += HandleBossDeath;
+            Debug.Log("보스 이벤트 연결됨");
+        }
     }
 
     private void OnAnyButtonClicked(string attribute)
@@ -39,5 +47,27 @@ public class SelectUI : MonoBehaviour
 
         // 로그 출력 (디버깅용)
         Debug.Log($"{attribute} 버튼이 클릭되어 모든 버튼이 비활성화되었습니다.");
+    }
+
+    // 보스가 죽었을 때 호출되는 메소드
+    private void HandleBossDeath()
+    {
+        // 보스를 죽였을 때 버튼을 다시 활성화
+        foreach (Button button in buttons)
+        {
+            button.gameObject.SetActive(true);
+        }
+
+        // 로그 출력 (디버깅용)
+        Debug.Log("보스가 죽었습니다. 버튼들이 다시 활성화되었습니다.");
+    }
+
+    // OnDestroy 또는 다른 종료 로직에서 이벤트 해제 (선택 사항)
+    void OnDestroy()
+    {
+        if (boss != null)
+        {
+            boss.OnBossDeath -= HandleBossDeath;
+        }
     }
 }

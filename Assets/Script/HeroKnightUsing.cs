@@ -158,7 +158,7 @@ public class HeroKnightUsing : MonoBehaviour
 
 
     // 데미지를 받는 함수
-    public void TakeDamage(int damage)
+    public void TakeDamage(float damage)
     {
         if (isDead) { return; }
         // 디버그 메시지 출력
@@ -430,8 +430,6 @@ private void FixedUpdate()
     private void Attack()
     {
         // 공격 횟수 증가
-        
-
         ParameterPlayerAttack attackArgument = new ParameterPlayerAttack();
         attackArgument.damage = ((m_attackCount == 3) ? m_attackPower * 1.5f : m_attackPower);
         attackArgument.knockback = ((m_attackCount == 3) ? m_attackKnockbackThird : m_attackKnockback);
@@ -445,8 +443,6 @@ private void FixedUpdate()
             m_attackCount = 0; // 공격 횟수 초기화
         }
 
-
-
         // 공격 박스 위치 조정
         Vector3 attackBoxPosition = pos.position;
         if (m_facingDirection == -1)
@@ -456,17 +452,12 @@ private void FixedUpdate()
         Collider2D[] colliders = Physics2D.OverlapBoxAll(attackBoxPosition, boxSize, 0);
         foreach (Collider2D collider in colliders)
         {
-            // 적이 Enemy 태그일 경우
-            if (collider.CompareTag("Enemy"))
+            // Enemy 클래스를 상속받은 모든 적을 대상으로 피해 적용
+            Enemy enemy = collider.GetComponent<Enemy>();
+            if (enemy != null) // Enemy를 상속받은 객체만 처리
             {
-                collider.GetComponent<Enemy>()?.TakeDamage(attackArgument); // 피해 적용
-                hitEnemies.Add(collider); // 타격된 적으로 등록
-            }
-            // 적이 RedBoss 태그일 경우
-            else if (collider.CompareTag("Boss"))
-            {
-                collider.GetComponent<Boss>()?.TakeDamage(attackArgument); // 피해 적용
-                hitEnemies.Add(collider); // 타격된 적으로 등록
+                enemy.TakeDamage(attackArgument); // 피해 적용
+                hitEnemies.Add(collider);        // 타격된 적으로 등록
             }
         }
     }
