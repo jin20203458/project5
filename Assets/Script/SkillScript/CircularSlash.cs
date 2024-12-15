@@ -4,12 +4,11 @@ using System.Collections;
 public class CircularSlash : MonoBehaviour
 {
     public GameObject skillPrefab; // 스킬 프리팹
-    public float spawnInterval = 0.4f; // 소환 간격
-    public float skillDamage = 10f; // 스킬 데미지
-    public Vector3 effectSize = new Vector3(1, 1, 1); // 이펙트 크기 (크기를 조정할 벡터)
+    public float skillDamage = 20f; // 스킬 데미지
+    public Vector3 effectSize = new Vector3(7, 3, 1); // 이펙트 크기 (크기를 조정할 벡터)
 
     private Transform pos; // 스킬 소환 위치
-    public float skillRadius = 3f; // 원형 범위 반경 (기즈모와 관련된 값)
+    public float skillRadius = 6f; // 원형 범위 반경 (기즈모와 관련된 값)
 
     private bool isSkillActive = false; // 스킬 활성화 여부
     private float damageTimer = 0f; // 대미지 처리 시간 간격
@@ -24,16 +23,11 @@ public class CircularSlash : MonoBehaviour
     void Update()
     {
         // G 키를 눌렀을 때 스킬 발동
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            StartSkill();
-        }
-
+        if (Input.GetKeyDown(KeyCode.G))StartSkill();
+        
         // G 키를 떼었을 때 스킬 중지
-        if (Input.GetKeyUp(KeyCode.G))
-        {
-            StopSkill();
-        }
+        if (Input.GetKeyUp(KeyCode.G))StopSkill();
+        
 
         // 스킬이 활성화된 상태에서 계속 대미지 입히기
         if (isSkillActive)
@@ -109,7 +103,7 @@ public class CircularSlash : MonoBehaviour
             spawnedSkill.transform.localScale = effectSize;
 
             // 잠시 대기 (소환 간격 대기)
-            yield return new WaitForSeconds(0.2f);  // 0.2초마다 이펙트 생성
+            yield return new WaitForSeconds(0.18f);  // 0.2초마다 이펙트 생성
         }
     }
 
