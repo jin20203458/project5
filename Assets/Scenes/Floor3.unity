@@ -615,11 +615,11 @@ PrefabInstance:
       insertIndex: 3
       addedObject: {fileID: 1166590655}
     - targetCorrespondingSourceObject: {fileID: 6323719953710832613, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1166590641}
+      insertIndex: 4
+      addedObject: {fileID: 1166590658}
     - targetCorrespondingSourceObject: {fileID: 6323719953710832613, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1166590658}
+      addedObject: {fileID: 1166590641}
   m_SourcePrefab: {fileID: 100100000, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
 --- !u!95 &233125591 stripped
 Animator:
