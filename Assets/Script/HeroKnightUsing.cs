@@ -19,7 +19,6 @@ public class HeroKnightUsing : MonoBehaviour
     [SerializeField] float m_rollForce = 6.0f;       // 구르기 힘
     [SerializeField] float m_attackKnockback = 8.0f;       // 플레이어가 몬스터 공격 시 넉백
     [SerializeField] float m_attackKnockbackThird = 800.0f;       // 플레이어가 몬스터 공격 시 넉백(3타 공격)
-    //[SerializeField] bool m_noBlood = false;         // 피 여부
     [SerializeField] GameObject m_slideDust;         // 슬라이딩 먼지 이펙트
 
     private Animator m_animator;                      // 애니메이터
@@ -119,7 +118,6 @@ public class HeroKnightUsing : MonoBehaviour
             if (m_rollCurrentTime > m_rollDuration)
                 m_rolling = false;
         }
-
         // 바닥에 닿았는지 체크
         if (!m_grounded && m_groundSensor.State())
         {
@@ -129,6 +127,23 @@ public class HeroKnightUsing : MonoBehaviour
 
         HandleAnimations(); // 애니메이션 처리
     }
+    private void FixedUpdate()
+    {
+        HandleMovement(); // 이동 처리
+
+        // 구르기 상태가 끝났을 때 충돌을 다시 활성화
+        if (m_rolling)
+        {
+            m_rollCurrentTime += Time.deltaTime;
+            if (m_rollCurrentTime >= m_rollDuration)
+            {
+                m_rolling = false; // 구르기 종료
+                IgnoreEnemyCollisions(false); // 구르기 끝난 후 충돌 다시 활성화
+            }
+        }
+    }
+
+
     // 속성 값 변경하는 메소드
     public void SetCharacterAttribute(string attribute)
     {
@@ -175,9 +190,6 @@ public class HeroKnightUsing : MonoBehaviour
             Die(); // 사망 처리
         }
 
-        // 무적 상태 활성화
-       // isInvincible = true;
-
         // 디버그 메시지 출력
         Debug.Log("체력이 " + damage + "만큼 감소, 현재 체력: " + currentHealth);
     }
@@ -211,23 +223,9 @@ public class HeroKnightUsing : MonoBehaviour
         Debug.Log("다시 모험을 떠나요!!");
     }
 
-private void FixedUpdate()
-    {
-        HandleMovement(); // 이동 처리
 
-        // 구르기 상태가 끝났을 때 충돌을 다시 활성화
-        if (m_rolling)
-        {
-            m_rollCurrentTime += Time.deltaTime;
-            if (m_rollCurrentTime >= m_rollDuration)
-            {
-                m_rolling = false; // 구르기 종료
-                IgnoreEnemyCollisions(false); // 구르기 끝난 후 충돌 다시 활성화
-            }
-        }
-    }
 
-    private void IgnoreEnemyCollisions(bool ignore)
+    private void IgnoreEnemyCollisions(bool ignore) 
     {
         // 모든 적과의 충돌 무시 / 활성화 처리
         Collider2D[] enemies = Physics2D.OverlapBoxAll(transform.position, boxSize, 0);
@@ -247,7 +245,7 @@ private void FixedUpdate()
         }
     }
 
-    private void HandleMovement()
+    private void HandleMovement() // 구르기
     {
         if (isDead) { return; } // 플레이어가 죽으면 아래 코드 실행하지 않음
         float inputX = Input.GetAxis("Horizontal");
