@@ -130,6 +130,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3720800604528278561, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
+      propertyPath: m_Offset.y
+      value: -0.97
+      objectReference: {fileID: 0}
     - target: {fileID: 5001551226625867410, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
       propertyPath: canvas
       value: 
@@ -181,7 +185,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7871011945849214670, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 2118000443}
   m_SourcePrefab: {fileID: 100100000, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
 --- !u!1 &463466036
 GameObject:
@@ -9609,7 +9616,7 @@ Transform:
   m_GameObject: {fileID: 2084943831}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.019744, y: -2.941065, z: 1}
+  m_LocalPosition: {x: -6.019744, y: -2.941065, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9617,6 +9624,48 @@ Transform:
   - {fileID: 812609634}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2118000435 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7871011945849214670, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
+  m_PrefabInstance: {fileID: 290502298}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2118000442 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6809023505556408250, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
+  m_PrefabInstance: {fileID: 290502298}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2118000443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2118000435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bf48d7175b0434438fc40a3d5fcebb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillPrefabs:
+  - {fileID: 2643731543104636565, guid: 489201d3d94dacc40876e78f096041ae, type: 3}
+  - {fileID: 3819401706902263583, guid: ff535db3a97f6c54399951bdece22fe3, type: 3}
+  - {fileID: 4921083724864065882, guid: ae3761a87c9628845ae462bf87dc68e9, type: 3}
+  pos: {fileID: 2118000442}
+  spawnInterval: 0.3
+  skillDamage: 10
+  knockback: 100
+  boxSizes:
+  - {x: 3, y: 2}
+  - {x: 7, y: 10}
+  - {x: 10, y: 10}
+  animator: {fileID: 2118000447}
+  moveSpeed: 40
+  speedDecay: 1
+--- !u!95 &2118000447 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 4939134680373326463, guid: 47ff6ddc6957bc740924cc7f6bd92753, type: 3}
+  m_PrefabInstance: {fileID: 290502298}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &89099412254808164
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -583,7 +583,7 @@ PrefabInstance:
       objectReference: {fileID: 5529660959859091935, guid: 821c1f84c07fddd4883e0c67dcf9651d, type: 3}
     - target: {fileID: 9043920546160527475, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
       propertyPath: m_attackPower
-      value: 5000
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9043920546160527475, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
       propertyPath: attackDuration
@@ -608,9 +608,17 @@ PrefabInstance:
       insertIndex: 2
       addedObject: {fileID: 1166590650}
     - targetCorrespondingSourceObject: {fileID: 6323719953710832613, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 1166590655}
+    - targetCorrespondingSourceObject: {fileID: 6323719953710832613, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1166590641}
   m_SourcePrefab: {fileID: 100100000, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
+--- !u!95 &233125591 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 2655505060201611074, guid: a4b4a6d32bcb19248a754d6602ffc7e4, type: 3}
+  m_PrefabInstance: {fileID: 233125590}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &311687513 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6267886242808457853, guid: 9b6d5937825726247b721177544acbbf, type: 3}
@@ -1654,6 +1662,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f5034bc83802944c9bca57c55e08978, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1166590655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166590635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bf48d7175b0434438fc40a3d5fcebb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skillPrefabs:
+  - {fileID: 2643731543104636565, guid: 489201d3d94dacc40876e78f096041ae, type: 3}
+  - {fileID: 3819401706902263583, guid: ff535db3a97f6c54399951bdece22fe3, type: 3}
+  - {fileID: 4921083724864065882, guid: ae3761a87c9628845ae462bf87dc68e9, type: 3}
+  pos: {fileID: 343813735}
+  spawnInterval: 0.2
+  skillDamage: 10
+  knockback: 40
+  boxSizes:
+  - {x: 3, y: 1}
+  - {x: 3, y: 1}
+  - {x: 3, y: 1}
+  animator: {fileID: 233125591}
+  moveSpeed: 15
+  speedDecay: 0.5
 --- !u!1 &1185813472
 GameObject:
   m_ObjectHideFlags: 0
@@ -10877,7 +10912,7 @@ Transform:
   m_GameObject: {fileID: 1618853426}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.019744, y: -2.941065, z: 1}
+  m_LocalPosition: {x: -6.019744, y: -2.941065, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
