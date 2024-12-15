@@ -11,7 +11,9 @@ public class SelectUI : MonoBehaviour
     public Button randomButton;     // 무작위 버튼
 
     public HeroKnightUsing heroKnight;  // HeroKnightUsing 스크립트 참조
-    public RedSlimeKing boss;  // Boss 스크립트 참조
+
+    public RedSlimeKing F3Boss;       // F3 보스 스크립트 참조
+    public BFGolem F2Boss;            // F2 보스 스크립트 참조
 
     private List<Button> buttons;  // 모든 버튼 리스트
 
@@ -26,11 +28,17 @@ public class SelectUI : MonoBehaviour
         healthButton.onClick.AddListener(() => OnAnyButtonClicked("health"));
         randomButton.onClick.AddListener(() => OnAnyButtonClicked("random"));
 
-        // 보스의 죽음을 감지하는 이벤트 연결
-        if (boss != null)
+        // 두 보스의 죽음을 감지하는 이벤트 연결
+        if (F3Boss != null)
         {
-            boss.OnBossDeath += HandleBossDeath;
-            Debug.Log("보스 이벤트 연결됨");
+            F3Boss.OnBossDeath += HandleBossDeath;
+            Debug.Log("F3 보스 이벤트 연결됨");
+        }
+
+        if (F2Boss != null)
+        {
+            F2Boss.OnBossDeath += HandleBossDeath;
+            Debug.Log("F2 보스 이벤트 연결됨");
         }
     }
 
@@ -65,9 +73,9 @@ public class SelectUI : MonoBehaviour
     // OnDestroy 또는 다른 종료 로직에서 이벤트 해제 (선택 사항)
     void OnDestroy()
     {
-        if (boss != null)
-        {
-            boss.OnBossDeath -= HandleBossDeath;
-        }
+        if (F3Boss != null) F3Boss.OnBossDeath -= HandleBossDeath;
+
+        if (F2Boss != null) F2Boss.OnBossDeath -= HandleBossDeath;
+
     }
 }

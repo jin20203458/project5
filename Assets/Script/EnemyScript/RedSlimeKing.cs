@@ -6,17 +6,16 @@ public class RedSlimeKing : Slime
 {
 
     public delegate void BossDeathHandler();
-    public event BossDeathHandler OnBossDeath;  // 보스가 죽었을 때 호출될 이벤트
+    public event BossDeathHandler OnBossDeath;              // 보스가 죽었을 때 호출될 이벤트
 
     public Text attackMessageText;                          // UI 텍스트를 참조할 변수 (디버그 메시지를 표시할 텍스트)
     public float specialAttackCooldown = 8f;                // 특수 공격(폭팔공격) 쿨다운
     public float PerformAreaAttackRange;                    // 범위공격반경
     public GameObject attackEffectPrefab;                   // 폭팔 공격 이펙트 Prefab을 참조할 변수
     private bool canUseSpecialAttack = false;               // 광역공격 사용 여부 변수
+    public Vector3 effectScale = new Vector3(1f, 1f, 1f);   // 이펙트의 크기 조정 (인스펙터에서 조정 가능)
+
     private SpawnEnemy spawnEnemyScript;                    // SpawnEnemy 스크립트를 참조할 변수
-
-    public Vector3 effectScale = new Vector3(1f, 1f, 1f);  // 이펙트의 크기 조정 (인스펙터에서 조정 가능)
-
 
     // Start 메서드를 override로 선언
     protected override void Start()
@@ -60,7 +59,7 @@ public class RedSlimeKing : Slime
             }
             isChasing = true;
 
-
+            anim.SetBool("isWalk", true);
             Vector3 direction = (player.position - transform.position).normalized;  // 플레이어를 추격
             transform.position = Vector3.MoveTowards(transform.position, player.position, moveSpeed * Time.deltaTime);
 
