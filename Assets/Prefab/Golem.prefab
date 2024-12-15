@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5506122067872425623}
   - component: {fileID: 1473633907690096580}
   - component: {fileID: 4456500826642448337}
-  - component: {fileID: 7389314610507947406}
+  - component: {fileID: 8253840519223676122}
   m_Layer: 0
   m_Name: Golem
   m_TagString: Enemy
@@ -171,7 +171,7 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: -0.2}
   m_Size: {x: 0.45, y: 0.6}
   m_Direction: 0
---- !u!114 &7389314610507947406
+--- !u!114 &8253840519223676122
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -180,7 +180,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5793187839947317316}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0e700c285cb9a24f823191128326cfe, type: 3}
+  m_Script: {fileID: 11500000, guid: d5dd229f698db47488cc14cbeb904eb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   prfHpBar: {fileID: 7735975493514810815, guid: 5f5b06d88e6e3274fb64245041f4c756, type: 3}
@@ -188,11 +188,12 @@ MonoBehaviour:
   markPrefab: {fileID: 7293109317121034979, guid: bfcfbc0de797a7e42abee44bac5e2372, type: 3}
   markYOffset: 1
   height: 1.7
-  enemyName: Enemy
-  maxHp: 100
-  nowHp: 100
-  atkDmg: 10
-  moveSpeed: 3
-  detectionRange: 10
+  enemyName: Golem
+  maxHp: 200
+  nowHp: 200
+  atkDmg: 50
+  moveSpeed: 2.45
+  detectionRange: 8
   patrolRange: 2
   maxPatrolTime: 3
+  attackAreaRadius: 2.2

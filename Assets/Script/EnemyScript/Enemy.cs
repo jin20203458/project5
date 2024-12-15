@@ -9,8 +9,8 @@ public class Enemy : MonoBehaviour
     protected Transform player;
     protected Animator anim;
 
-    private RectTransform hpBar;
-    private Image nowHpbar;
+    protected RectTransform hpBar;
+    protected Image nowHpbar;
     public GameObject prfHpBar;
     public GameObject canvas;
 
@@ -26,14 +26,14 @@ public class Enemy : MonoBehaviour
     public float moveSpeed = 3f;
     public float detectionRange = 5f;
 
-    protected Vector3 patrolTarget;  // 배회
+    protected Vector3 patrolTarget;    // 배회
     public float patrolRange = 2f;
     protected float patrolTimer = 0f;  // 목표 지점에 도달한 후 시간 측정
-    public float maxPatrolTime = 3f;  // 목표 지점에 도달하지 못한 상태에서 시간을 얼마나 기다릴지 설정 (초 단위)
+    public float maxPatrolTime = 3f;   // 목표 지점에 도달하지 못한 상태에서 시간을 얼마나 기다릴지 설정 (초 단위)
 
 
 
-    private bool isInDamageState = false;
+    protected bool isInDamageState = false;
     protected bool isChasing = false;
     protected bool isEnemyDead = false;
     protected bool isTakingDamage = false;
@@ -70,19 +70,19 @@ public class Enemy : MonoBehaviour
 
     protected virtual void Update()
     {
-        // 체력 바 위치 갱신
-        // 피격 중이라면 추격을 하지 않도록
-        if (!isInDamageState && nowHp > 0)  // 피격 상태가 아니고 살아있다면
+        // 피격 상태가 아니고, 살아있으며, 플레이어가 존재한다면 추격
+        if (!isInDamageState && nowHp > 0 && player != null)
+            DetectAndChasePlayer();
+
+
+        // 체력 바 위치,상태 갱신
+        if (hpBar != null)
         {
-            if (player != null) DetectAndChasePlayer();
+            Vector3 _hpBarPos = Camera.main.WorldToScreenPoint
+                (new Vector3(transform.position.x, transform.position.y + height, 0));
+            hpBar.position = _hpBarPos;
+            nowHpbar.fillAmount = nowHp / maxHp; 
         }
-
-        // 체력 바 위치 갱신
-        Vector3 _hpBarPos = Camera.main.WorldToScreenPoint(new Vector3(transform.position.x, transform.position.y + height, 0));
-        hpBar.position = _hpBarPos;
-
-        // 체력 바 상태 갱신
-        if (nowHpbar != null) nowHpbar.fillAmount = nowHp / maxHp;
     }
 
     public virtual void TakeDamage(ParameterPlayerAttack argument)
@@ -129,31 +129,29 @@ public class Enemy : MonoBehaviour
         nowHp = 0;
         anim.SetBool("isDead", true);
 
-        if (hpBar != null) Destroy(hpBar.gameObject); //체력 바 UI 삭제
+        if (hpBar != null) Destroy(hpBar.gameObject); // 체력 바 UI 삭제
 
-        StartCoroutine(HandleDeath());
+        // 죽을 때 애니메이션 길이를 확인한 후 비활성화 처리
+        // float deathAnimationLength = GetAnimationClipLengthByTag("Dead"); // 태그가 Dead인 상태의 애니메이션 길이 구하기
+        StartCoroutine(HandleDeath(0.8f)); // 이부분 확인 부탁드림
 
-        Debug.Log($"[{GetType().Name}] {enemyName} is dead."); 
+        Debug.Log($"[{GetType().Name}] {enemyName} is dead.");
     }
 
-    protected virtual IEnumerator HandleDeath()
+    protected virtual IEnumerator HandleDeath(float delay)
     {
-        // 적이 죽었을 때 처리할 로직
+        yield return new WaitForSeconds(delay); // 애니메이션 재생 시간만큼 대기
+        gameObject.SetActive(false); // 오브젝트 비활성화
         Debug.Log($"[{GetType().Name}] {enemyName} has died.");
-
-        // 적 오브젝트 비활성화
-        gameObject.SetActive(false);
-
-        yield return null; // 필요시 대기
     }
 
     protected bool IsOnPlatform()
     {
         int platformLayer = LayerMask.GetMask("Platform"); 
-        RaycastHit2D hitRight = Physics2D.Raycast(transform.position + new Vector3(0.5f, -1f, 0), Vector2.down, 10f, platformLayer);
-        RaycastHit2D hitLeft = Physics2D.Raycast(transform.position + new Vector3(-0.5f, -1f, 0), Vector2.down, 10f, platformLayer);
-        Debug.DrawRay(transform.position + new Vector3(0.5f, -1f, 0), Vector2.down * 2f, Color.red);
-        Debug.DrawRay(transform.position + new Vector3(-0.5f, -1f, 0), Vector2.down * 2f, Color.red);
+        RaycastHit2D hitRight = Physics2D.Raycast(transform.position + new Vector3(0.8f, -1f, 0), Vector2.down, 10f, platformLayer);
+        RaycastHit2D hitLeft = Physics2D.Raycast(transform.position + new Vector3(-0.8f, -1f, 0), Vector2.down, 10f, platformLayer);
+        Debug.DrawRay(transform.position + new Vector3(0.8f, -1f, 0), Vector2.down * 10f, Color.red);
+        Debug.DrawRay(transform.position + new Vector3(-0.8f, -1f, 0), Vector2.down * 10f, Color.red);
 
         if (hitRight.collider == null || !hitRight.collider.CompareTag("Platform") ||
             hitLeft.collider == null || !hitLeft.collider.CompareTag("Platform"))
@@ -252,7 +250,6 @@ public class Enemy : MonoBehaviour
         {
             Patrol();  // 플레이어가 없을 때 배회
             isChasing = false;
-            anim.SetBool("isWalk", false);
         }
     }
 
@@ -286,4 +283,19 @@ public class Enemy : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
+
+    //protected float GetAnimationClipLengthByTag(string tag)
+    //{
+    //    // 현재 Animator 상태 가져오기
+    //    AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0); // Layer 0 기준
+    //    if (anim != null && stateInfo.IsTag(tag))
+    //    {
+    //        // 현재 상태가 태그와 일치하면 해당 상태의 길이를 반환
+    //        return stateInfo.length;
+    //    }
+
+    //    Debug.LogWarning($"Animation with tag '{tag}' not found!");
+    //    return 0f; // 태그를 찾지 못했을 때 기본값 반환
+    //}
+
 }

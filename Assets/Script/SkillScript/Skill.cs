@@ -10,9 +10,9 @@ public class Skill : MonoBehaviour
     public float knockback = 5f;       // 스킬 넉백 값
     public Vector2[] boxSizes;         // 각 프리팹의 박스 사이즈
     public Animator animator;          // 애니메이터 컴포넌트 (스킬 애니메이션을 제어)
-    public float moveSpeed = 30f;  // 최대 속도 (초기값 80)
-    private float minSpeed = 0f;    // 최소 속도 (0으로 설정)
-    public float speedDecay = 0.5f; // 속도 감소 값
+    public float moveSpeed = 30f;      // 최대 속도 (초기값 80)
+    private float minSpeed = 0f;       // 최소 속도 (0으로 설정)
+    public float speedDecay = 0.5f;    // 속도 감소 값
     private bool isCastingSkill;       // 스킬 시전 여부 체크
     private int m_facingDirection = 1; // 1: 오른쪽, -1: 왼쪽
 
